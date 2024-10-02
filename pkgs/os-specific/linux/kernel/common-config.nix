@@ -213,6 +213,7 @@ let
       BFQ_GROUP_IOSCHED = yes;
       MQ_IOSCHED_KYBER = yes;
       IOSCHED_BFQ = module;
+      SCHED_CLASS_EXT = whenAtLeast "6.12" yes;
       # Enable CPU utilization clamping for RT tasks
       UCLAMP_TASK = yes;
       UCLAMP_TASK_GROUP = yes;
