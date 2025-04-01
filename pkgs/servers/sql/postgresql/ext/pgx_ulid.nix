@@ -1,7 +1,7 @@
 {
-  lib,
   buildPgrxExtension,
   fetchFromGitHub,
+  lib,
   nix-update-script,
   postgresql,
   util-linux,
@@ -19,7 +19,8 @@ buildPgrxExtension rec {
     hash = "sha256-VdLWwkUA0sVs5Z/Lyf5oTRhcHVzPmhgnYQhIM8MWJ0c=";
   };
 
-  cargoHash = "sha256-Gn+SjzGaxnGKJYI9+WyE1+TzlF/2Ne43aKbXrSzfQKM=";
+  useFetchCargoVendor = true;
+  cargoHash = "sha256-OyrfwLMHn2aihfijHxE5oaz+XQC1HFlYbTp8Sw8RcK0=";
 
   postInstall = ''
     # Upstream renames the extension when packaging

@@ -20,13 +20,13 @@
 
 stdenv.mkDerivation rec {
   pname = "qucs-s";
-  version = "24.4.1";
+  version = "25.1.1";
 
   src = fetchFromGitHub {
     owner = "ra3xdh";
     repo = "qucs_s";
     rev = version;
-    hash = "sha256-ll5P8cqJBzoieExElggn5tRbDcmH7L3yvcbtAQ0BBww=";
+    hash = "sha256-H/iLCCX1fMozs/G8erX7cia7wRLjvLxofuiu6pGVJ58=";
   };
 
   postPatch = ''
@@ -50,14 +50,14 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ flex bison wrapQtAppsHook cmake ];
   buildInputs = [ qtbase qttools qtcharts qtsvg gperf adms ]
-    ++ lib.optionals stdenv.isLinux [ qtwayland libX11 ]
+    ++ lib.optionals stdenv.hostPlatform.isLinux [ qtwayland libX11 ]
     ++ kernels;
 
   cmakeFlags = [
     "-DWITH_QT6=ON"
   ];
 
-  # Make custom kernels avaible from qucs-s
+  # Make custom kernels available from qucs-s
   qtWrapperArgs = [ "--prefix" "PATH" ":" (lib.makeBinPath kernels) ];
 
   QTDIR = qtbase.dev;

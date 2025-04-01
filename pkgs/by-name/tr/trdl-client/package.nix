@@ -8,13 +8,13 @@
 
 buildGoModule rec {
   pname = "trdl-client";
-  version = "0.7.0";
+  version = "0.8.7";
 
   src = fetchFromGitHub {
     owner = "werf";
     repo = "trdl";
     rev = "v${version}";
-    hash = "sha256-umeoiEq+Cp/cKpiNxCnMDghubm3LPFPJA18ChuYmIVo=";
+    hash = "sha256-4RN2vrTP4horjDvuuFJbQhToL/4boIuaG+efoTbmebI=";
   };
 
   sourceRoot = "${src.name}/client";

@@ -53,7 +53,7 @@ in
           type = lib.types.str;
           default = "hourly";
           description = ''
-            How often freshclam is invoked. See systemd.time(7) for more
+            How often freshclam is invoked. See {manpage}`systemd.time(7)` for more
             information about the format.
           '';
         };
@@ -74,7 +74,7 @@ in
           type = lib.types.str;
           default = "hourly";
           description = ''
-            How often freshclam is invoked. See systemd.time(7) for more
+            How often freshclam is invoked. See {manpage}`systemd.time(7)` for more
             information about the format.
           '';
         };
@@ -105,7 +105,7 @@ in
           type = lib.types.str;
           default = "*-*-* 04:00:00";
           description = ''
-            How often clamdscan is invoked. See systemd.time(7) for more
+            How often clamdscan is invoked. See {manpage}`systemd.time(7)` for more
             information about the format.
             By default this runs using 10 cores at most, be sure to run it at a time of low traffic.
           '';
@@ -169,6 +169,7 @@ in
 
     systemd.services.clamav-daemon = lib.mkIf cfg.daemon.enable {
       description = "ClamAV daemon (clamd)";
+      documentation = [ "man:clamd(8)" ];
       after = lib.optionals cfg.updater.enable [ "clamav-freshclam.service" ];
       wants = lib.optionals cfg.updater.enable [ "clamav-freshclam.service" ];
       wantedBy = [ "multi-user.target" ];
@@ -199,6 +200,7 @@ in
 
     systemd.services.clamav-freshclam = lib.mkIf cfg.updater.enable {
       description = "ClamAV virus database updater (freshclam)";
+      documentation = [ "man:freshclam(1)" ];
       restartTriggers = [ freshclamConfigFile ];
       requires = [ "network-online.target" ];
       after = [ "network-online.target" ];
@@ -276,6 +278,7 @@ in
 
     systemd.services.clamdscan = lib.mkIf cfg.scanner.enable {
       description = "ClamAV virus scanner";
+      documentation = [ "man:clamdscan(1)" ];
       after = lib.optionals cfg.updater.enable [ "clamav-freshclam.service" ];
       wants = lib.optionals cfg.updater.enable [ "clamav-freshclam.service" ];
 

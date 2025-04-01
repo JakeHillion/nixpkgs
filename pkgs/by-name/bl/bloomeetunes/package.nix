@@ -10,13 +10,13 @@
 
 flutter324.buildFlutterApplication rec {
   pname = "bloomeetunes";
-  version = "2.10.13";
+  version = "2.11.3";
 
   src = fetchFromGitHub {
     owner = "HemantKArya";
     repo = "BloomeeTunes";
-    tag = "v${version}+157";
-    hash = "sha256-cLhcuk4rLHFg3al+MkZnOWMG8n6r61idBSmDyP6ez+g=";
+    tag = "v${version}+168";
+    hash = "sha256-ySx4bwfcJHMP/GFtZGm/gdig4lw42SsdcMsdsAE6pTE=";
   };
 
   pubspecLock = lib.importJSON ./pubspec.lock.json;
@@ -55,7 +55,7 @@ flutter324.buildFlutterApplication rec {
     homepage = "https://github.com/HemantKArya/BloomeeTunes";
     mainProgram = "bloomee";
     license = with lib.licenses; [ gpl2Plus ];
-    maintainers = with lib.maintainers; [ aucub ];
+    maintainers = with lib.maintainers; [ ];
     platforms = lib.platforms.linux;
   };
 }

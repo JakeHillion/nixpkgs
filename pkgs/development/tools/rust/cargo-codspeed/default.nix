@@ -13,16 +13,17 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "cargo-codspeed";
-  version = "2.4.0";
+  version = "2.9.1";
 
   src = fetchFromGitHub {
     owner = "CodSpeedHQ";
     repo = "codspeed-rust";
     rev = "v${version}";
-    hash = "sha256-pi02Bn5m4JoTtCIZvxkiUVKkjmtCShKqZw+AyhaVdyY=";
+    hash = "sha256-q5xsZ8KHuC/Qm+o4xcWbW9Y9VrxHZ+/AxUO8TYEbE74=";
   };
 
-  cargoHash = "sha256-5Ps31Hdis+N/MT/o0IDHSJgHBM3F/ve50ovfFSviMtA=";
+  useFetchCargoVendor = true;
+  cargoHash = "sha256-Ance7Hfl0EOmMfZf3ZqvawrK7scot7WpefLtemHKb+U=";
 
   nativeBuildInputs = [
     curl
@@ -42,6 +43,10 @@ rustPlatform.buildRustPackage rec {
 
   cargoBuildFlags = [ "-p=cargo-codspeed" ];
   cargoTestFlags = cargoBuildFlags;
+  checkFlags = [
+    # requires an extra dependency, blit
+    "--skip=test_package_in_deps_build"
+  ];
 
   env = {
     LIBGIT2_NO_VENDOR = 1;

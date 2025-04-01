@@ -5,7 +5,7 @@
 , img ? pkgs.stdenv.hostPlatform.linux-kernel.target
 , storeDir ? builtins.storeDir
 , rootModules ?
-    [ "virtio_pci" "virtio_mmio" "virtio_blk" "virtio_balloon" "virtio_rng" "ext4" "unix" "virtiofs" "crc32c_generic" ]
+    [ "virtio_pci" "virtio_mmio" "virtio_blk" "virtio_balloon" "virtio_rng" "ext4" "virtiofs" "crc32c_generic" ]
 }:
 
 let
@@ -237,10 +237,9 @@ rec {
   vmRunCommand = qemuCommand: writeText "vm-run" ''
     ${coreutils}/bin/mkdir xchg
     export > xchg/saved-env
-    PATH=${coreutils}/bin
 
     if [ -f "''${NIX_ATTRS_SH_FILE-}" ]; then
-      cp $NIX_ATTRS_JSON_FILE $NIX_ATTRS_SH_FILE xchg
+      ${coreutils}/bin/cp $NIX_ATTRS_JSON_FILE $NIX_ATTRS_SH_FILE xchg
       source "$NIX_ATTRS_SH_FILE"
     fi
     source $stdenv/setup
@@ -248,25 +247,33 @@ rec {
     eval "$preVM"
 
     if [ "$enableParallelBuilding" = 1 ]; then
+      QEMU_NR_VCPUS=0
       if [ ''${NIX_BUILD_CORES:-0} = 0 ]; then
-        QEMU_OPTS+=" -smp cpus=$(nproc)"
+        QEMU_NR_VCPUS="$(nproc)"
       else
-        QEMU_OPTS+=" -smp cpus=$NIX_BUILD_CORES"
+        QEMU_NR_VCPUS="$NIX_BUILD_CORES"
       fi
+      # qemu only supports 255 vCPUs (see error from `qemu-system-x86_64 -smp 256`)
+      if [ "$QEMU_NR_VCPUS" -gt 255 ]; then
+        QEMU_NR_VCPUS=255
+      fi
+      QEMU_OPTS+=" -smp cpus=$QEMU_NR_VCPUS"
     fi
 
     # Write the command to start the VM to a file so that the user can
     # debug inside the VM if the build fails (when Nix is called with
     # the -K option to preserve the temporary build directory).
-    cat > ./run-vm <<EOF
+    ${coreutils}/bin/cat > ./run-vm <<EOF
     #! ${bash}/bin/sh
     ''${diskImage:+diskImage=$diskImage}
-    ${pkgs.virtiofsd}/bin/virtiofsd --xattr --socket-path virtio-store.sock --sandbox none --shared-dir "${storeDir}" &
-    ${pkgs.virtiofsd}/bin/virtiofsd --xattr --socket-path virtio-xchg.sock --sandbox none --shared-dir xchg &
+    # GitHub Actions runners seems to not allow installing seccomp filter: https://github.com/rcambrj/nix-pi-loader/issues/1#issuecomment-2605497516
+    # Since we are running in a sandbox already, the difference between seccomp and none is minimal
+    ${pkgs.virtiofsd}/bin/virtiofsd --xattr --socket-path virtio-store.sock --sandbox none --seccomp none --shared-dir "${storeDir}" &
+    ${pkgs.virtiofsd}/bin/virtiofsd --xattr --socket-path virtio-xchg.sock --sandbox none --seccomp none --shared-dir xchg &
     ${qemuCommand}
     EOF
 
-    chmod +x ./run-vm
+    ${coreutils}/bin/chmod +x ./run-vm
     source ./run-vm
 
     if ! test -e xchg/in-vm-exit; then
@@ -274,7 +281,7 @@ rec {
       exit 1
     fi
 
-    exitCode="$(cat xchg/in-vm-exit)"
+    exitCode="$(${coreutils}/bin/cat xchg/in-vm-exit)"
     if [ "$exitCode" != "0" ]; then
       exit "$exitCode"
     fi
@@ -453,6 +460,8 @@ rec {
         # Make the Nix store available in /mnt, because that's where the RPMs live.
         mkdir -p /mnt${storeDir}
         ${util-linux}/bin/mount -o bind ${storeDir} /mnt${storeDir}
+        # Some programs may require devices in /dev to be available (e.g. /dev/random)
+        ${util-linux}/bin/mount -o bind /dev /mnt/dev
 
         # Newer distributions like Fedora 18 require /lib etc. to be
         # symlinked to /usr.
@@ -491,7 +500,7 @@ rec {
 
         rm /mnt/.debug
 
-        ${util-linux}/bin/umount /mnt${storeDir} /mnt/tmp ${lib.optionalString unifiedSystemDir "/mnt/proc"}
+        ${util-linux}/bin/umount /mnt${storeDir} /mnt/tmp /mnt/dev ${lib.optionalString unifiedSystemDir "/mnt/proc"}
         ${util-linux}/bin/umount /mnt
       '';
 
@@ -1018,6 +1027,23 @@ rec {
           (fetchurl {
             url = "mirror://ubuntu/dists/jammy/universe/binary-amd64/Packages.xz";
             sha256 = "sha256-0pyyTJP+xfQyVXBrzn60bUd5lSA52MaKwbsUpvNlXOI=";
+          })
+        ];
+      urlPrefix = "mirror://ubuntu";
+      packages = commonDebPackages ++ [ "diffutils" "libc-bin" ];
+    };
+
+    ubuntu2404x86_64 = {
+      name = "ubuntu-24.04-noble-amd64";
+      fullName = "Ubuntu 24.04 Noble (amd64)";
+      packagesLists =
+        [ (fetchurl {
+            url = "mirror://ubuntu/dists/noble/main/binary-amd64/Packages.xz";
+            sha256 = "sha256-KmoZnhAxpcJ5yzRmRtWUmT81scA91KgqqgMjmA3ZJFE=";
+          })
+          (fetchurl {
+            url = "mirror://ubuntu/dists/noble/universe/binary-amd64/Packages.xz";
+            sha256 = "sha256-upBX+huRQ4zIodJoCNAMhTif4QHQwUliVN+XI2QFWZo=";
           })
         ];
       urlPrefix = "mirror://ubuntu";

@@ -15,7 +15,7 @@
   gtk3,
   glib,
   libgee,
-  libgda,
+  libgda5,
   gtksourceview,
   libxml2,
   libsecret,
@@ -23,7 +23,7 @@
 }:
 
 let
-  sqlGda = libgda.override {
+  sqlGda = libgda5.override {
     mysqlSupport = true;
     postgresSupport = true;
   };
@@ -35,7 +35,7 @@ stdenv.mkDerivation rec {
 
   src = fetchFromGitHub {
     owner = "Alecaddd";
-    repo = pname;
+    repo = "sequeler";
     rev = "v${version}";
     sha256 = "sha256-MsHHTYERe0v+u3KnVtx+jmJTKORJTJ7bNfJMZHV9Ly4=";
   };

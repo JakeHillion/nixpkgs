@@ -51,7 +51,7 @@ in
       type = types.nullOr types.path;
       default = null;
       description = ''
-        Environment file (see `systemd.exec(5)`
+        Environment file (see {manpage}`systemd.exec(5)`
         "EnvironmentFile=" section for the syntax) to define variables for dex.
         This option can be used to safely include secret keys into the dex configuration.
       '';
@@ -117,7 +117,7 @@ in
             "-/etc/localtime"
             "-/etc/nsswitch.conf"
             "-/etc/resolv.conf"
-            "-/etc/ssl/certs/ca-certificates.crt"
+            "${config.security.pki.caBundle}:/etc/ssl/certs/ca-certificates.crt"
           ];
           BindPaths = optional (cfg.settings.storage.type == "postgres") "/var/run/postgresql";
           # ProtectClock= adds DeviceAllow=char-rtc r

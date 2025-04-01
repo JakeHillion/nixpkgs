@@ -1,7 +1,7 @@
 {
   lib,
   stdenv,
-  fetchurl,
+  fetchFromGitLab,
   bzip2,
   cmake,
   curl,
@@ -34,11 +34,14 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "apt";
-  version = "2.9.18";
+  version = "2.9.33";
 
-  src = fetchurl {
-    url = "mirror://debian/pool/main/a/apt/apt_${finalAttrs.version}.tar.xz";
-    hash = "sha256-mQO7u8ibtqRoeggKG/kLuLo2gC7BlrNUmkwf0FAtGjo=";
+  src = fetchFromGitLab {
+    domain = "salsa.debian.org";
+    owner = "apt-team";
+    repo = "apt";
+    rev = finalAttrs.version;
+    hash = "sha256-CniUdpQWUyS0GMRLmdA4zX0iF3geT5dglBfJy1li9O0=";
   };
 
   # cycle detection; lib can't be split

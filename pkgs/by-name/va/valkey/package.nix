@@ -23,13 +23,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "valkey";
-  version = "8.0.1";
+  version = "8.0.2";
 
   src = fetchFromGitHub {
     owner = "valkey-io";
     repo = "valkey";
     rev = finalAttrs.version;
-    hash = "sha256-WB0blQLxQOTkK8UGsH6WISZAisUAtGIDfjoc4RnPSew=";
+    hash = "sha256-05EuPjVokzfJxhrnvFHD7prwt5y7gPxemeDIkLML7lw=";
   };
 
   patches = lib.optional useSystemJemalloc ./use_system_jemalloc.patch;
@@ -100,7 +100,7 @@ stdenv.mkDerivation (finalAttrs: {
     description = "High-performance data structure server that primarily serves key/value workloads";
     license = licenses.bsd3;
     platforms = platforms.all;
-    maintainers = with maintainers; [ rucadi ];
+    maintainers = with maintainers; [ ];
     changelog = "https://github.com/valkey-io/valkey/releases/tag/${finalAttrs.version}";
     mainProgram = "valkey-cli";
   };

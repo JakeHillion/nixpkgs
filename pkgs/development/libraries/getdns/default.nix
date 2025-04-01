@@ -79,7 +79,7 @@ rec {
     };
   };
 
-  stubby = stdenv.mkDerivation rec {
+  stubby = stdenv.mkDerivation {
     pname = "stubby";
     version = "0.4.3";
     outputs = [
@@ -97,12 +97,14 @@ rec {
       yq
     ];
 
-    buildInputs = [
-      getdns
-      libyaml
-      openssl
-      systemd
-    ] ++ lib.optionals stdenv.hostPlatform.isDarwin [ darwin.Security ];
+    buildInputs =
+      [
+        getdns
+        libyaml
+        openssl
+      ]
+      ++ lib.optionals stdenv.hostPlatform.isLinux [ systemd ]
+      ++ lib.optionals stdenv.hostPlatform.isDarwin [ darwin.Security ];
 
     postInstall = ''
       rm -r $out/share/doc

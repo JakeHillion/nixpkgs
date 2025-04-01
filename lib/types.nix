@@ -75,6 +75,7 @@ let
   # Note that individual attributes can be overriden if needed.
   elemTypeFunctor = name: { elemType, ... }@payload: {
     inherit name payload;
+    wrappedDeprecationMessage = makeWrappedDeprecationMessage payload;
     type    = outer_types.types.${name};
     binOp   = a: b:
       let
@@ -85,10 +86,10 @@ let
           null
         else
           { elemType = merged; };
-    wrappedDeprecationMessage = { loc }: lib.warn ''
-      The deprecated `type.functor.wrapped` attribute of the option `${showOption loc}` is accessed, use `type.nestedTypes.elemType` instead.
-    '' payload.elemType;
   };
+  makeWrappedDeprecationMessage = payload: { loc }: lib.warn ''
+    The deprecated `${lib.optionalString (loc != null) "type."}functor.wrapped` attribute ${lib.optionalString (loc != null) "of the option `${showOption loc}` "}is accessed, use `${lib.optionalString (loc != null) "type."}nestedTypes.elemType` instead.
+  '' payload.elemType;
 
 
   outer_types =
@@ -227,7 +228,16 @@ rec {
     { _type = "option-type";
       inherit
         name check merge emptyValue getSubOptions getSubModules substSubModules
-        typeMerge functor deprecationMessage nestedTypes descriptionClass;
+        typeMerge deprecationMessage nestedTypes descriptionClass;
+      functor =
+        if functor ? wrappedDeprecationMessage then
+          functor // {
+            wrapped = functor.wrappedDeprecationMessage {
+              loc = null;
+            };
+          }
+        else
+          functor;
       description = if description == null then name else description;
     };
 
@@ -566,20 +576,47 @@ rec {
       })
       (x: (x._type or null) == "pkgs");
 
-    path = mkOptionType {
-      name = "path";
-      descriptionClass = "noun";
-      check = x: isStringLike x && builtins.substring 0 1 (toString x) == "/";
-      merge = mergeEqualOption;
+    path = pathWith {
+      absolute = true;
     };
 
-    pathInStore = mkOptionType {
-      name = "pathInStore";
-      description = "path in the Nix store";
-      descriptionClass = "noun";
-      check = x: isStringLike x && builtins.match "${builtins.storeDir}/[^.].*" (toString x) != null;
-      merge = mergeEqualOption;
+    pathInStore = pathWith {
+      inStore = true;
     };
+
+    pathWith = {
+      inStore ? null,
+      absolute ? null,
+    }:
+      throwIf (inStore != null && absolute != null && inStore && !absolute) "In pathWith, inStore means the path must be absolute" mkOptionType {
+        name = "path";
+        description = (
+          (if absolute == null then "" else (if absolute then "absolute " else "relative ")) +
+          "path" +
+          (if inStore == null then "" else (if inStore then " in the Nix store" else " not in the Nix store"))
+        );
+        descriptionClass = "noun";
+
+        merge = mergeEqualOption;
+        functor = defaultFunctor "path" // {
+          type = pathWith;
+          payload = {inherit inStore absolute; };
+          binOp = lhs: rhs: if lhs == rhs then lhs else null;
+        };
+
+        check = x:
+          let
+            isInStore = builtins.match "${builtins.storeDir}/[^.].*" (toString x) != null;
+            isAbsolute = builtins.substring 0 1 (toString x) == "/";
+            isExpectedType = (
+              if inStore == null || inStore then
+                isStringLike x
+              else
+                isString x # Do not allow a true path, which could be copied to the store later on.
+            );
+          in
+            isExpectedType && (inStore == null || inStore == isInStore) && (absolute == null || absolute == isAbsolute);
+          };
 
     listOf = elemType: mkOptionType rec {
       name = "listOf";
@@ -798,6 +835,15 @@ rec {
         };
       };
 
+    # A value produced by `lib.mkLuaInline`
+    luaInline = mkOptionType {
+      name = "luaInline";
+      description = "inline lua";
+      descriptionClass = "noun";
+      check = x: x._type or null == "lua-inline";
+      merge = mergeEqualOption;
+    };
+
     uniq = unique { message = ""; };
 
     unique = { message }: type: mkOptionType rec {
@@ -808,7 +854,9 @@ rec {
       getSubOptions = type.getSubOptions;
       getSubModules = type.getSubModules;
       substSubModules = m: uniq (type.substSubModules m);
-      functor = (defaultFunctor name) // { wrapped = type; };
+      functor = elemTypeFunctor name { elemType = type; } // {
+        type = payload: types.unique { inherit message; } payload.elemType;
+      };
       nestedTypes.elemType = type;
     };
 
@@ -828,7 +876,9 @@ rec {
       getSubOptions = elemType.getSubOptions;
       getSubModules = elemType.getSubModules;
       substSubModules = m: nullOr (elemType.substSubModules m);
-      functor = (defaultFunctor name) // { wrapped = elemType; };
+      functor = (elemTypeFunctor name { inherit elemType; }) // {
+        type = payload: types.nullOr payload.elemType;
+      };
       nestedTypes.elemType = elemType;
     };
 
@@ -837,12 +887,19 @@ rec {
       description = "function that evaluates to a(n) ${optionDescriptionPhrase (class: class == "noun" || class == "composite") elemType}";
       descriptionClass = "composite";
       check = isFunction;
-      merge = loc: defs:
-        fnArgs: (mergeDefinitions (loc ++ [ "<function body>" ]) elemType (map (fn: { inherit (fn) file; value = fn.value fnArgs; }) defs)).mergedValue;
+      merge = loc: defs: {
+        # An argument attribute has a default when it has a default in all definitions
+        __functionArgs = lib.zipAttrsWith (_: lib.all (x: x)) (
+          lib.map (fn: lib.functionArgs fn.value) defs
+        );
+        __functor = _: callerArgs: (mergeDefinitions (loc ++ [ "<function body>" ]) elemType (map (fn: { inherit (fn) file; value = fn.value callerArgs; }) defs)).mergedValue;
+      };
       getSubOptions = prefix: elemType.getSubOptions (prefix ++ [ "<function body>" ]);
       getSubModules = elemType.getSubModules;
       substSubModules = m: functionTo (elemType.substSubModules m);
-      functor = (defaultFunctor "functionTo") // { wrapped = elemType; };
+      functor = (elemTypeFunctor "functionTo" { inherit elemType; }) // {
+        type = payload: types.functionTo payload.elemType;
+      };
       nestedTypes.elemType = elemType;
     };
 
@@ -1077,13 +1134,13 @@ rec {
                then t2.merge loc defs
           else mergeOneOption loc defs;
       typeMerge = f':
-        let mt1 = t1.typeMerge (elemAt f'.wrapped 0).functor;
-            mt2 = t2.typeMerge (elemAt f'.wrapped 1).functor;
+        let mt1 = t1.typeMerge (elemAt f'.payload.elemType 0).functor;
+            mt2 = t2.typeMerge (elemAt f'.payload.elemType 1).functor;
         in
            if (name == f'.name) && (mt1 != null) && (mt2 != null)
            then functor.type mt1 mt2
            else null;
-      functor = (defaultFunctor name) // { wrapped = [ t1 t2 ]; };
+      functor = elemTypeFunctor name { elemType = [ t1 t2 ]; };
       nestedTypes.left = t1;
       nestedTypes.right = t2;
     };
@@ -1116,7 +1173,9 @@ rec {
         getSubModules = finalType.getSubModules;
         substSubModules = m: coercedTo coercedType coerceFunc (finalType.substSubModules m);
         typeMerge = t: null;
-        functor = (defaultFunctor name) // { wrapped = finalType; };
+        functor = (defaultFunctor name) // {
+          wrappedDeprecationMessage = makeWrappedDeprecationMessage { elemType = finalType; };
+        };
         nestedTypes.coercedType = coercedType;
         nestedTypes.finalType = finalType;
       };
@@ -1125,6 +1184,53 @@ rec {
     addCheck = elemType: check: elemType // { check = x: elemType.check x && check x; };
 
   };
+
+  /**
+    Merges two option types together.
+
+    :::{.note}
+    Uses the type merge function of the first type, to merge it with the second type.
+
+    Usually types can only be merged if they are of the same type
+    :::
+
+    # Inputs
+
+    : `a` (option type): The first option type.
+    : `b` (option type): The second option type.
+
+    # Returns
+
+    - The merged option type.
+    - `{ _type = "merge-error"; error = "Cannot merge types"; }` if the types can't be merged.
+
+    # Examples
+    :::{.example}
+    ## `lib.types.mergeTypes` usage example
+    ```nix
+    let
+      enumAB = lib.types.enum ["A" "B"];
+      enumXY = lib.types.enum ["X" "Y"];
+      # This operation could be notated as: [ A ] | [ B ] -> [ A B ]
+      merged = lib.types.mergeTypes enumAB enumXY; # -> enum [ "A" "B" "X" "Y" ]
+    in
+      assert merged.check "A"; # true
+      assert merged.check "B"; # true
+      assert merged.check "X"; # true
+      assert merged.check "Y"; # true
+      merged.check "C" # false
+    ```
+    :::
+  */
+  mergeTypes = a: b:
+    assert isOptionType a && isOptionType b;
+    let
+      merged = a.typeMerge b.functor;
+    in
+    if merged == null then
+      setType "merge-error" { error = "Cannot merge types"; }
+    else
+      merged;
 };
 
 in outer_types // outer_types.types

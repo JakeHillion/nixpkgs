@@ -14,13 +14,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "doublecmd";
-  version = "1.1.21";
+  version = "1.1.23";
 
   src = fetchFromGitHub {
     owner = "doublecmd";
     repo = "doublecmd";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-NsjsjCSPbo7zwejmOjFRuQpcMyGZEY67hyStjtMrIGk=";
+    hash = "sha256-nvLVJAB751dY28jG1WjguuEVkCUb4Iy7V8cJjw3y8GI=";
   };
 
   nativeBuildInputs = [
@@ -69,7 +69,7 @@ stdenv.mkDerivation (finalAttrs: {
     description = "Two-panel graphical file manager written in Pascal";
     license = lib.licenses.gpl2Plus;
     mainProgram = "doublecmd";
-    maintainers = with lib.maintainers; [ AndersonTorres ];
+    maintainers = with lib.maintainers; [ ];
     platforms = lib.platforms.linux;
   };
 })

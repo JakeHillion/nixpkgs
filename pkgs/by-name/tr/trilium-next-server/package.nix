@@ -7,10 +7,20 @@
 }:
 
 let
-  version = "0.90.12";
+  version = "0.92.4";
 
-  serverSource.url = "https://github.com/TriliumNext/Notes/releases/download/v${version}/TriliumNextNotes-v${version}-server-linux-x64.tar.xz";
-  serverSource.sha256 = "0gvb01cj334n805rs230xwwcv4rf2z2giikpagw8wqrs54gy3b35";
+  serverSource_x64.url = "https://github.com/TriliumNext/Notes/releases/download/v${version}/TriliumNextNotes-Server-v${version}-linux-x64.tar.xz";
+  serverSource_x64.sha256 = "1bcacr5sxmrq9zvh8xjyr30y5mz0y6qyx2m18dblswdi0mbi7cv4";
+  serverSource_arm64.url = "https://github.com/TriliumNext/Notes/releases/download/v${version}/TriliumNextNotes-Server-v${version}-linux-arm64.tar.xz";
+  serverSource_arm64.sha256 = "04mjkqywwdax46r8q8wygi9dxglz2qipmlrv3cqqpdvjm0yxh2g2";
+
+  serverSource =
+    if stdenv.hostPlatform.isx86_64 then
+      serverSource_x64
+    else if stdenv.hostPlatform.isAarch64 then
+      serverSource_arm64
+    else
+      throw "${stdenv.hostPlatform.config} not supported by trilium-next-server";
 in
 stdenv.mkDerivation {
   pname = "trilium-next-server";
@@ -45,6 +55,10 @@ stdenv.mkDerivation {
       --chdir "$out/share/trilium-server" \
       --add-flags "src/main"
 
+    # Clean up broken symlinks and build tools.
+    rm "$out"/share/trilium-server/node/bin/{npm,npx}
+    rm -r "$out"/share/trilium-server/node_modules/{@npmcli,@rollup,@babel,.bin}
+
     runHook postInstall
   '';
 
@@ -53,7 +67,10 @@ stdenv.mkDerivation {
     homepage = "https://github.com/TriliumNext/Notes";
     license = lib.licenses.agpl3Plus;
     sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
-    platforms = [ "x86_64-linux" ];
+    platforms = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
     maintainers = with lib.maintainers; [
       eliandoran
       fliegendewurst

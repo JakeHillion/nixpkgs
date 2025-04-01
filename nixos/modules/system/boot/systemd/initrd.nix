@@ -105,6 +105,7 @@ let
     kernel = config.system.modulesTree;
     firmware = config.hardware.firmware;
     allowMissing = false;
+    inherit (config.boot.initrd) extraFirmwarePaths;
   };
 
   initrdBinEnv = pkgs.buildEnv {
@@ -163,7 +164,7 @@ in
       type = types.lines;
       example = "DefaultLimitCORE=infinity";
       description = ''
-        Extra config options for systemd. See systemd-system.conf(5) man page
+        Extra config options for systemd. See {manpage}`systemd-system.conf(5)` man page
         for available options.
       '';
     };
@@ -538,7 +539,9 @@ in
           "${cfg.package.util-linux}/bin/umount"
           "${cfg.package.util-linux}/bin/sulogin"
 
-          # required for script services, and some tools like xfs still want the sh symlink
+          # required for services generated with writeShellScript and friends
+          pkgs.runtimeShell
+          # some tools like xfs still want the sh symlink
           "${pkgs.bash}/bin"
 
           # so NSS can look up usernames
@@ -701,10 +704,11 @@ in
             "|stage1panic"
           ];
         };
-        script = ''
-          echo c > /proc/sysrq-trigger
-        '';
-        serviceConfig.Type = "oneshot";
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "${pkgs.coreutils}/bin/echo c";
+          StandardOutput = "file:/proc/sysrq-trigger";
+        };
       };
     };
   };

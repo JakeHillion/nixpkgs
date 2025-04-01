@@ -6,11 +6,11 @@
 
 stdenv.mkDerivation rec {
   pname = "valgrind";
-  version = "3.23.0";
+  version = "3.24.0";
 
   src = fetchurl {
     url = "https://sourceware.org/pub/${pname}/${pname}-${version}.tar.bz2";
-    hash = "sha256-xcNKM4BFe5t1YG34kBAuffLHArlCDC6++VQPi11WJk0=";
+    hash = "sha256-ca7iAr3vGuc4mMz36cMVE0+n22wkYGOvxQOu9wLsA70=";
   };
 
   patches = [
@@ -49,8 +49,7 @@ stdenv.mkDerivation rec {
   separateDebugInfo = stdenv.hostPlatform.isLinux;
 
   preConfigure = lib.optionalString stdenv.hostPlatform.isFreeBSD ''
-    substituteInPlace configure --replace '`uname -r`' \
-        ${toString stdenv.hostPlatform.parsed.kernel.version}.0-
+    substituteInPlace configure --replace-fail '`uname -r`' ${stdenv.cc.libc.version}-
   '' + lib.optionalString stdenv.hostPlatform.isDarwin (
     let OSRELEASE = ''
       $(awk -F '"' '/#define OSRELEASE/{ print $2 }' \

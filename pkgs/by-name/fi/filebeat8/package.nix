@@ -8,16 +8,16 @@
 
 buildGoModule rec {
   pname = "filebeat";
-  version = "8.16.1";
+  version = "8.17.3";
 
   src = fetchFromGitHub {
     owner = "elastic";
     repo = "beats";
     tag = "v${version}";
-    hash = "sha256-suzubh5aILiuRe8/wb52fnSujGNhGRXBxE8jv1WDzNc=";
+    hash = "sha256-b0JDOA3yb/Pfcp9WQFvzE+k9DXDKg/hF4+iWGJ00doo=";
   };
 
-  vendorHash = "sha256-wspQImG/cxWglwojweuH+h5abTSrtcK6F8cpBeCDH/U=";
+  vendorHash = "sha256-p2Bm2MM85BFI/ePw+ZY90UgqeFKbozGvFvsjY6M82ts=";
 
   subPackages = [ "filebeat" ];
 
@@ -29,7 +29,7 @@ buildGoModule rec {
   doInstallCheck = true;
 
   passthru = {
-    updateScript = nix-update-script { };
+    updateScript = nix-update-script { extraArgs = [ "--version-regex=v(8\..*)" ]; };
   };
 
   meta = {

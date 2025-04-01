@@ -7,13 +7,13 @@
 
 stdenvNoCC.mkDerivation {
   pname = "publicsuffix-list";
-  version = "0-unstable-2024-12-06";
+  version = "0-unstable-2025-02-12";
 
   src = fetchFromGitHub {
     owner = "publicsuffix";
     repo = "list";
-    rev = "d94154e5222aa000f70def82b9711df88b4612d9";
-    hash = "sha256-Cdrut2plOpItOdvgdYl7B7f9FqfVRzOmseUs9XAFnfM=";
+    rev = "560007a8aea8267f15cad9abcdbcff7848186bd8";
+    hash = "sha256-/5O0ac0mJZzOgy8h1NE0dTt0jzAEkymBbh5hJmc1+qk=";
   };
 
   dontBuild = true;

@@ -5,6 +5,7 @@
   fetchFromGitHub,
   gitMinimal,
   portaudio,
+  playwright-driver,
 }:
 
 let
@@ -12,7 +13,7 @@ let
     self = python3;
     packageOverrides = _: super: { tree-sitter = super.tree-sitter_0_21; };
   };
-  version = "0.71.0";
+  version = "0.75.2";
   aider-chat = python3.pkgs.buildPythonPackage {
     pname = "aider-chat";
     inherit version;
@@ -22,7 +23,7 @@ let
       owner = "Aider-AI";
       repo = "aider";
       tag = "v${version}";
-      hash = "sha256-UptGAR0q3JlzYS5QJVeQo/uxBPaivsvOBBjoX869BRU=";
+      hash = "sha256-+XpvAnxsv6TbsJwTAgNdJtZxxoPXQ9cxRVUaFZCnS8w=";
     };
 
     pythonRelaxDeps = true;
@@ -100,6 +101,7 @@ let
       smmap
       sniffio
       sounddevice
+      socksio
       soundfile
       soupsieve
       tiktoken
@@ -179,9 +181,19 @@ let
 
     passthru = {
       withPlaywright = aider-chat.overridePythonAttrs (
-        { dependencies, ... }:
+        {
+          dependencies,
+          makeWrapperArgs,
+          propagatedBuildInputs ? [ ],
+          ...
+        }:
         {
           dependencies = dependencies ++ aider-chat.optional-dependencies.playwright;
+          propagatedBuildInputs = propagatedBuildInputs ++ [ playwright-driver.browsers ];
+          makeWrapperArgs = makeWrapperArgs ++ [
+            "--set PLAYWRIGHT_BROWSERS_PATH ${playwright-driver.browsers}"
+            "--set PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true"
+          ];
         }
       );
     };
@@ -191,7 +203,7 @@ let
       homepage = "https://github.com/paul-gauthier/aider";
       changelog = "https://github.com/paul-gauthier/aider/blob/v${version}/HISTORY.md";
       license = lib.licenses.asl20;
-      maintainers = with lib.maintainers; [ taha-yassine ];
+      maintainers = with lib.maintainers; [ happysalada ];
       mainProgram = "aider";
     };
   };

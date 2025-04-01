@@ -179,7 +179,7 @@ let
         type = types.attrsOf types.path;
         default = { };
         description = ''
-          Hooks that will be placed under /var/lib/libvirt/hooks/lxc.d/
+          Hooks that will be placed under /var/lib/libvirt/hooks/network.d/
           and called for networks begin/end events.
           Please see https://libvirt.org/hooks.html for documentation.
         '';
@@ -363,7 +363,7 @@ in
       type = types.bool;
       default = true;
       description = ''
-        Weither to configure OpenSSH to use the [SSH Proxy](https://libvirt.org/ssh-proxy.html).
+        Whether to configure OpenSSH to use the [SSH Proxy](https://libvirt.org/ssh-proxy.html).
       '';
     };
   };
@@ -515,6 +515,8 @@ in
 
     systemd.services.libvirt-guests = {
       wantedBy = [ "multi-user.target" ];
+      requires = [ "libvirtd.service" ];
+      after = [ "libvirtd.service" ];
       path = with pkgs; [ coreutils gawk cfg.package ];
       restartIfChanged = false;
 

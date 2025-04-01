@@ -27,19 +27,16 @@
 
 stdenv.mkDerivation rec {
   pname = "opencolorio";
-  version = "2.4.1";
+  version = "2.4.2";
 
   src = fetchFromGitHub {
     owner = "AcademySoftwareFoundation";
     repo = "OpenColorIO";
     rev = "v${version}";
-    hash = "sha256-Ytqvd4qSqO+6hId3v7X9cd+zrOElcqTBev5miJL/07M=";
+    hash = "sha256-+P7T8UZuQEVmsMykSWtUxg0vC7Sr4fQJpovCU5sKtsA=";
   };
 
   patches = [
-    # Workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/25200.
-    # Needed for zlib >= 1.3 && cmake < 3.27.4.
-    ./broken-cmake-zlib-version.patch
     # Fix incorrect line number in test
     ./line-numbers.patch
   ];

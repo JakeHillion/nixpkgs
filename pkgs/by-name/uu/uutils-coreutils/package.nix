@@ -12,21 +12,21 @@
   buildMulticallBinary ? true,
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "uutils-coreutils";
-  version = "0.0.28";
+  version = "0.0.30";
 
   src = fetchFromGitHub {
     owner = "uutils";
     repo = "coreutils";
-    tag = version;
-    hash = "sha256-Gwks+xTkwK5dgV9AkSthIrhBNwq/WvM9SNr0wR/SBSM=";
+    tag = finalAttrs.version;
+    hash = "sha256-OZ9AsCJmQmn271OzEmqSZtt1OPn7zHTScQiiqvPhqB0=";
   };
 
-  cargoDeps = rustPlatform.fetchCargoTarball {
-    inherit src;
-    name = "uutils-coreutils-${version}";
-    hash = "sha256-i7RvsgtmkH8og8lkRQURWLrzrhPkxans+KME2Ili0wM=";
+  cargoDeps = rustPlatform.fetchCargoVendor {
+    inherit (finalAttrs) src;
+    name = "uutils-coreutils-${finalAttrs.version}";
+    hash = "sha256-DsVLp2Y15k+KQI7S6A4hylOhJN016MEdEWx9VQIQEgQ=";
   };
 
   nativeBuildInputs = [
@@ -55,7 +55,7 @@ stdenv.mkDerivation rec {
       prefix' = lib.optionalString (prefix != null) prefix;
     in
     "${placeholder "out"}/bin/${prefix'}ls";
-  versionCheckProgramArg = [ "--version" ];
+  versionCheckProgramArg = "--version";
   doInstallCheck = true;
 
   passthru = {
@@ -69,8 +69,9 @@ stdenv.mkDerivation rec {
       CLI utils in Rust. This repo is to aggregate the GNU coreutils rewrites.
     '';
     homepage = "https://github.com/uutils/coreutils";
+    changelog = "https://github.com/uutils/coreutils/releases/tag/${finalAttrs.version}";
     maintainers = with lib.maintainers; [ siraben ];
     license = lib.licenses.mit;
     platforms = lib.platforms.unix;
   };
-}
+})

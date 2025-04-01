@@ -4,6 +4,7 @@
   openssl,
   python311,
   fetchpatch2,
+  icu75,
   enableNpm ? true,
 }:
 
@@ -11,6 +12,7 @@ let
   buildNodejs = callPackage ./nodejs.nix {
     inherit openssl;
     python = python311;
+    icu = icu75; # does not build with newer
   };
 
   gypPatches = callPackage ./gyp-patches.nix { } ++ [
@@ -19,8 +21,8 @@ let
 in
 buildNodejs {
   inherit enableNpm;
-  version = "18.20.5";
-  sha256 = "76037b9bad0ab9396349282dbfcec1b872ff7bd8c8d698853bebd982940858bf";
+  version = "18.20.8";
+  sha256 = "36a7bf1a76d62ce4badd881ee5974a323c70e1d8d19165732684e145632460d9";
   patches = [
     ./configure-emulator-node18.patch
     ./configure-armv6-vfpv2.patch

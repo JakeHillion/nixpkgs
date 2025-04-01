@@ -11,20 +11,23 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "easytier";
-  version = "2.1.1";
+  version = "2.2.4";
 
   src = fetchFromGitHub {
     owner = "EasyTier";
     repo = "EasyTier";
     tag = "v${version}";
-    hash = "sha256-qWICiY2g/wXT0Bt7lrCg7GgL1futOhelViB59UCLPro=";
+    hash = "sha256-YrWuNHpNDs1VVz6Sahi2ViPT4kcJf10UUMRWEs4Y0xc=";
   };
 
   useFetchCargoVendor = true;
 
-  cargoHash = "sha256-SpGW/RAbQUFdxqEKRPrTp5MXng7BLiSnofoJG8NsjsU=";
+  cargoHash = "sha256-uUmF4uIhSx+byG+c4hlUuuy+O87Saw8wRJ5OGk3zaPA=";
 
-  nativeBuildInputs = [ protobuf ];
+  nativeBuildInputs = [
+    protobuf
+    rustPlatform.bindgenHook
+  ];
 
   buildInputs = lib.optionals stdenv.hostPlatform.isDarwin [
     darwin.apple_sdk.frameworks.Security

@@ -58,14 +58,14 @@
 
 buildPythonPackage rec {
   pname = "transformers";
-  version = "4.48.0";
+  version = "4.50.3";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "huggingface";
     repo = "transformers";
     tag = "v${version}";
-    hash = "sha256-jh2bMmvTC0G0kLJl7xXpsvXvBmlbZEDA88AfosoE9sA=";
+    hash = "sha256-Qou5q7FZJJXO87lgMC5Qttfi5KJWCwuzG5icCEfgs0M=";
   };
 
   build-system = [ setuptools ];
@@ -190,7 +190,7 @@ buildPythonPackage rec {
     homepage = "https://github.com/huggingface/transformers";
     description = "Natural Language Processing for TensorFlow 2.0 and PyTorch";
     mainProgram = "transformers-cli";
-    changelog = "https://github.com/huggingface/transformers/releases/tag/${src.tag}";
+    changelog = "https://github.com/huggingface/transformers/releases/tag/v${version}";
     license = lib.licenses.asl20;
     platforms = lib.platforms.unix;
     maintainers = with lib.maintainers; [

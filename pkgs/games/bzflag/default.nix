@@ -16,11 +16,11 @@
 
 stdenv.mkDerivation rec {
   pname = "bzflag";
-  version = "2.4.26";
+  version = "2.4.30";
 
   src = fetchurl {
     url = "https://download.bzflag.org/${pname}/source/${version}/${pname}-${version}.tar.bz2";
-    sha256 = "sha256-AYMEBf8mrR3FlafgaVyCTCeG5niGjZ/4Iq6xSsdIEBQ=";
+    sha256 = "sha256-u3i3UOe856p8Eb01kGuwikmsx8UL8pYprzgO7NFTiU0=";
   };
 
   nativeBuildInputs = [ pkg-config ];

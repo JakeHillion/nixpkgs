@@ -2,7 +2,6 @@
   lib,
   stdenv,
   fetchzip,
-  fetchpatch,
   cmake,
   pkg-config,
   alsa-lib,
@@ -10,6 +9,7 @@
   ffmpeg,
   freeimage,
   freetype,
+  gettext,
   harfbuzz,
   icu,
   libgit2,
@@ -31,8 +31,15 @@ stdenv.mkDerivation (finalAttrs: {
     ./001-add-nixpkgs-retroarch-cores.patch
   ];
 
+  postPatch = ''
+    # ldd-based detection fails for cross builds
+    substituteInPlace CMake/Packages/FindPoppler.cmake \
+      --replace-fail 'GET_PREREQUISITES("''${POPPLER_LIBRARY}" POPPLER_PREREQS 1 0 "" "")' ""
+  '';
+
   nativeBuildInputs = [
     cmake
+    gettext # msgfmt
     pkg-config
   ];
 

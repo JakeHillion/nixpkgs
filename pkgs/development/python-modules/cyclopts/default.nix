@@ -19,7 +19,7 @@
 
 buildPythonPackage rec {
   pname = "cyclopts";
-  version = "3.2.0";
+  version = "3.11.1";
   pyproject = true;
 
   disabled = pythonOlder "3.8";
@@ -28,7 +28,7 @@ buildPythonPackage rec {
     owner = "BrianPugh";
     repo = "cyclopts";
     tag = "v${version}";
-    hash = "sha256-U2H/SyVqoNlKAiim6FieEQw0SKK/b9diP9AjXb8PZjg=";
+    hash = "sha256-cTxFUAHHFkZOs+UqwI0SJj3k3zISdNvR1LHHp3ZeyO8=";
   };
 
   build-system = [
@@ -62,7 +62,7 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "Module to create CLIs based on Python type hints";
     homepage = "https://github.com/BrianPugh/cyclopts";
-    changelog = "https://github.com/BrianPugh/cyclopts/releases/tag/v${version}";
+    changelog = "https://github.com/BrianPugh/cyclopts/releases/tag/${src.tag}";
     license = licenses.asl20;
     maintainers = with maintainers; [ fab ];
   };

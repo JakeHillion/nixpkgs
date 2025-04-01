@@ -34,6 +34,7 @@
   libXau,
   libinput,
   libdrm,
+  libgbm,
   libei,
   libdisplay-info,
   gsettings-desktop-schemas,
@@ -48,7 +49,7 @@
   libwacom,
   libSM,
   xwayland,
-  mesa,
+  mesa-gl-headers,
   meson,
   gnome-settings-daemon,
   xorgserver,
@@ -67,7 +68,7 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "mutter";
-  version = "46.7";
+  version = "46.8";
 
   outputs = [
     "out"
@@ -78,7 +79,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   src = fetchurl {
     url = "mirror://gnome/sources/mutter/${lib.versions.major finalAttrs.version}/mutter-${finalAttrs.version}.tar.xz";
-    hash = "sha256-+7wVwLB2CS0WwB1cbwxvVNIR84Miy4wjseF9xW1MUl0=";
+    hash = "sha256-+8CDVEr7O4Vn18pobCF/g3sG+UeNbiV0FZ/5ocjhyWI=";
   };
 
   mesonFlags = [
@@ -97,7 +98,7 @@ stdenv.mkDerivation (finalAttrs: {
   propagatedBuildInputs = [
     # required for pkg-config to detect mutter-mtk
     graphene
-    mesa  # actually uses eglmesaext
+    mesa-gl-headers
   ];
 
   nativeBuildInputs = [
@@ -128,6 +129,7 @@ stdenv.mkDerivation (finalAttrs: {
     harfbuzz
     libcanberra
     libdrm
+    libgbm
     libei
     libdisplay-info
     libgudev

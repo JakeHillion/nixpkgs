@@ -2,7 +2,7 @@
   lib,
   stdenv,
   fetchFromGitHub,
-  substituteAll,
+  replaceVars,
   glib,
   gnome-shell,
   gettext,
@@ -12,18 +12,17 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "gnome-shell-extension-EasyScreenCast";
-  version = "1.10.0";
+  version = "1.11.0";
 
   src = fetchFromGitHub {
     owner = "EasyScreenCast";
     repo = "EasyScreenCast";
     rev = finalAttrs.version;
-    hash = "sha256-5PJB+lm4NKeNpS2vg9xaVl5aUR0Rofmt6sEKXfuGG6c=";
+    hash = "sha256-CK9ta+2Kf7IFKb+uQhI1AtdNkJZpBgIL7JDM3JqsV4c=";
   };
 
   patches = [
-    (substituteAll {
-      src = ./fix-gi-path.patch;
+    (replaceVars ./fix-gi-path.patch {
       gnomeShell = gnome-shell;
     })
   ];

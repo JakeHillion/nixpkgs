@@ -2,29 +2,28 @@
   lib,
   buildPythonPackage,
   fetchFromGitHub,
+  nix-update-script,
 
   # build-system
-  poetry-core,
+  pdm-backend,
 
   # dependencies
   aiohttp,
   dataclasses-json,
-  langchain-core,
+  httpx-sse,
   langchain,
+  langchain-core,
   langsmith,
+  numpy,
   pydantic-settings,
   pyyaml,
   requests,
   sqlalchemy,
   tenacity,
 
-  # optional-dependencies
-  typer,
-  numpy,
-
   # tests
   httpx,
-  langchain-standard-tests,
+  langchain-tests,
   lark,
   pandas,
   pytest-asyncio,
@@ -38,49 +37,58 @@
 
 buildPythonPackage rec {
   pname = "langchain-community";
-  version = "0.3.6";
+  version = "0.3.19";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "langchain-ai";
     repo = "langchain";
-    tag = "langchain-core==${version}";
-    hash = "sha256-ACR+JzKcnYXROGOQe6DlZeqcYd40KlesgXSUOybOT20=";
+    tag = "langchain-community==${version}";
+    hash = "sha256-U7L60GyxRQL9ze22Wy7g6ZdI/IFyAtUe1bRCconv6pg=";
   };
 
   sourceRoot = "${src.name}/libs/community";
 
-  build-system = [ poetry-core ];
+  build-system = [ pdm-backend ];
+
+  patches = [
+    # Remove dependency on blockbuster (not available in nixpkgs due to dependency on forbiddenfruit)
+    ./rm-blockbuster.patch
+  ];
 
   pythonRelaxDeps = [
+    # Each component release requests the exact latest langchain and -core.
+    # That prevents us from updating individul components.
+    "langchain"
+    "langchain-core"
     "numpy"
     "pydantic-settings"
     "tenacity"
   ];
 
+  pythonRemoveDeps = [
+    "blockbuster"
+  ];
+
   dependencies = [
     aiohttp
     dataclasses-json
-    langchain-core
+    httpx-sse
     langchain
+    langchain-core
     langsmith
+    numpy
     pydantic-settings
     pyyaml
     requests
     sqlalchemy
     tenacity
   ];
-
-  optional-dependencies = {
-    cli = [ typer ];
-    numpy = [ numpy ];
-  };
-
   pythonImportsCheck = [ "langchain_community" ];
 
   nativeCheckInputs = [
     httpx
-    langchain-standard-tests
+    langchain-tests
     lark
     pandas
     pytest-asyncio
@@ -93,10 +101,6 @@ buildPythonPackage rec {
   ];
 
   pytestFlagsArray = [ "tests/unit_tests" ];
-
-  passthru = {
-    inherit (langchain-core) updateScript;
-  };
 
   __darwinAllowLocalNetworking = true;
 
@@ -114,13 +118,25 @@ buildPythonPackage rec {
     "test_proper_inputs"
     # pydantic.errors.PydanticUserError: `NatBotChain` is not fully defined; you should define `BaseCache`, then call `NatBotChain.model_rebuild()`.
     "test_variable_key_naming"
+    # Fails due to the lack of blockbuster
+    "test_group_dependencies"
   ];
+
+  passthru.updateScript = nix-update-script {
+    extraArgs = [
+      "--version-regex"
+      "^langchain-community==(.*)"
+    ];
+  };
 
   meta = {
     changelog = "https://github.com/langchain-ai/langchain/releases/tag/langchain-community==${version}";
     description = "Community contributed LangChain integrations";
     homepage = "https://github.com/langchain-ai/langchain/tree/master/libs/community";
     license = lib.licenses.mit;
-    maintainers = with lib.maintainers; [ natsukium ];
+    maintainers = with lib.maintainers; [
+      natsukium
+      sarahec
+    ];
   };
 }

@@ -318,7 +318,7 @@ let
   checkDependencyList' = positions: name: deps:
     imap1
       (index: dep:
-        if isDerivation dep || dep == null || builtins.isString dep || builtins.isPath dep then dep
+        if dep == null || isDerivation dep || builtins.isString dep || builtins.isPath dep then dep
         else if isList dep then checkDependencyList' ([index] ++ positions) name dep
         else throw "Dependency is not of a valid type: ${concatMapStrings (ix: "element ${toString ix} of ") ([index] ++ positions)}${name} for ${attrs.name or attrs.pname}")
       deps;
@@ -400,14 +400,14 @@ else let
         );
     }) // {
       builder = attrs.realBuilder or stdenv.shell;
-      args = attrs.args or ["-e" (attrs.builder or ./default-builder.sh)];
+      args = attrs.args or ["-e" ./source-stdenv.sh (attrs.builder or ./default-builder.sh)];
       inherit stdenv;
 
       # The `system` attribute of a derivation has special meaning to Nix.
       # Derivations set it to choose what sort of machine could be used to
       # execute the build, The build platform entirely determines this,
       # indeed more finely than Nix knows or cares about. The `system`
-      # attribute of `buildPlatfom` matches Nix's degree of specificity.
+      # attribute of `buildPlatform` matches Nix's degree of specificity.
       # exactly.
       inherit (stdenv.buildPlatform) system;
 

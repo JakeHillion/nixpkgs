@@ -96,7 +96,7 @@ in runBuildTests {
       str = "foo";
       attrs.foo = null;
       list = [ null null ];
-      path = ./formats.nix;
+      path = ./testfile;
     };
     expected = ''
       {
@@ -111,7 +111,7 @@ in runBuildTests {
           null
         ],
         "null": null,
-        "path": "${./formats.nix}",
+        "path": "${./testfile}",
         "str": "foo",
         "true": true
       }
@@ -128,7 +128,7 @@ in runBuildTests {
       str = "foo";
       attrs.foo = null;
       list = [ null null ];
-      path = ./formats.nix;
+      path = ./testfile;
       no = "no";
       time = "22:30:00";
     };
@@ -142,7 +142,7 @@ in runBuildTests {
       - null
       'no': 'no'
       'null': null
-      path: ${./formats.nix}
+      path: ${./testfile}
       str: foo
       time: '22:30:00'
       'true': true
@@ -547,7 +547,7 @@ in runBuildTests {
         1
         null
       ];
-      path = ./formats.nix;
+      path = ./testfile;
     };
     expected = ''
       attrs {
@@ -561,7 +561,7 @@ in runBuildTests {
         null
       ]
       "null": null
-      "path": "${./formats.nix}"
+      "path": "${./testfile}"
       "str": "foo"
       "true": true
     '';
@@ -598,6 +598,82 @@ in runBuildTests {
       tautologies = true
       \u00fctf\ 8 = d\u00fbh
       \u0627\u0644\u062c\u0628\u0631 = \u0623\u0643\u062b\u0631 \u0645\u0646 \u0645\u062c\u0631\u062f \u0623\u0631\u0642\u0627\u0645
+    '';
+  };
+
+  luaTable = shouldPass {
+    format = formats.lua { };
+    input = {
+      null = null;
+      false = false;
+      true = true;
+      int = 10;
+      float = 3.141;
+      str = "foo";
+      attrs.foo = null;
+      list = [
+        null
+        null
+      ];
+      path = ./testfile;
+      inline = lib.mkLuaInline "hello('world')";
+    };
+    expected = ''
+      return {
+        ["attrs"] = {
+          ["foo"] = nil,
+        },
+        ["false"] = false,
+        ["float"] = 3.141,
+        ["inline"] = (hello("world")),
+        ["int"] = 10,
+        ["list"] = {
+          nil,
+          nil,
+        },
+        ["null"] = nil,
+        ["path"] = "${./testfile}",
+        ["str"] = "foo",
+        ["true"] = true,
+      }
+    '';
+  };
+
+  luaBindings = shouldPass {
+    format = formats.lua {
+      asBindings = true;
+    };
+    input = {
+      null = null;
+      _false = false;
+      _true = true;
+      int = 10;
+      float = 3.141;
+      str = "foo";
+      attrs.foo = null;
+      list = [
+        null
+        null
+      ];
+      path = ./testfile;
+      inline = lib.mkLuaInline "hello('world')";
+    };
+    expected = ''
+      _false = false
+      _true = true
+      attrs = {
+        ["foo"] = nil,
+      }
+      float = 3.141
+      inline = (hello("world"))
+      int = 10
+      list = {
+        nil,
+        nil,
+      }
+      null = nil
+      path = "${./testfile}"
+      str = "foo"
     '';
   };
 

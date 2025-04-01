@@ -13,23 +13,21 @@
   installShellFiles,
   versionCheckHook,
   nix-update-script,
+  bzip2,
 }:
+rustPlatform.buildRustPackage (finalAttrs: {
+  pname = "komac";
+  version = "2.11.1";
 
-let
-  version = "2.8.0";
   src = fetchFromGitHub {
     owner = "russellbanks";
     repo = "Komac";
-    tag = "v${version}";
-    hash = "sha256-yAf89GtKu500VPn+CKF6sGC+TPhJcGz2lR7C30/YBRI=";
+    tag = "v${finalAttrs.version}";
+    hash = "sha256-X0lvr8GafJIP8kwnLTk3taq3WZAx50/jUt3zJIELJnc=";
   };
-in
-rustPlatform.buildRustPackage {
-  inherit version src;
 
-  pname = "komac";
-
-  cargoHash = "sha256-wgOZoKsbYkbbCKS+2pfqgsHD5Azw72gPJXHhfw5mNqo=";
+  useFetchCargoVendor = true;
+  cargoHash = "sha256-utsLfvFGTBuD1Tywu9TfnPGDhvSWZSokvwW22USWWls=";
 
   nativeBuildInputs =
     [
@@ -44,6 +42,7 @@ rustPlatform.buildRustPackage {
       dbus
       openssl
       zstd
+      bzip2
     ]
     ++ lib.optionals stdenv.hostPlatform.isDarwin [
       darwin.apple_sdk.frameworks.Security
@@ -69,7 +68,7 @@ rustPlatform.buildRustPackage {
 
   passthru = {
     tests.version = testers.testVersion {
-      inherit version;
+      inherit (finalAttrs) version;
 
       package = komac;
       command = "komac --version";
@@ -81,7 +80,7 @@ rustPlatform.buildRustPackage {
   meta = {
     description = "Community Manifest Creator for WinGet";
     homepage = "https://github.com/russellbanks/Komac";
-    changelog = "https://github.com/russellbanks/Komac/releases/tag/v${version}";
+    changelog = "https://github.com/russellbanks/Komac/releases/tag/v${finalAttrs.version}";
     license = lib.licenses.gpl3Plus;
     maintainers = with lib.maintainers; [
       kachick
@@ -89,4 +88,4 @@ rustPlatform.buildRustPackage {
     ];
     mainProgram = "komac";
   };
-}
+})

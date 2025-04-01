@@ -2,7 +2,7 @@
   lib,
   writeScript,
   fetchFromGitHub,
-  substituteAll,
+  replaceVars,
   inkscape,
   pdflatex,
   lualatex,
@@ -21,20 +21,19 @@ let
 in
 python3.pkgs.buildPythonApplication rec {
   pname = "textext";
-  version = "1.11.0";
+  version = "1.11.1";
 
   src = fetchFromGitHub {
     owner = "textext";
     repo = "textext";
     tag = version;
-    sha256 = "sha256-u0oNAauCUHNObE5Hp/X9hHcEP2wmLhcxH2aas3Mg5RY=";
+    sha256 = "sha256-eqyS3P+FrwwO567GBBOLk53fC6ROG6mZKHL1RGDPLpM=";
   };
 
   patches = [
     # Make sure we can point directly to pdflatex in the extension,
     # instead of relying on the PATH (which might not have it)
-    (substituteAll {
-      src = ./fix-paths.patch;
+    (replaceVars ./fix-paths.patch {
       inherit pdflatex lualatex;
     })
 

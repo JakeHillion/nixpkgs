@@ -1,5 +1,6 @@
 {
   lib,
+  callPackage,
   buildPythonPackage,
   fetchFromGitHub,
 
@@ -14,18 +15,20 @@
 
   # tests
   pytestCheckHook,
+  pytest-asyncio,
+  writableTmpDirAsHomeHook,
 }:
 
 buildPythonPackage rec {
   pname = "llm-ollama";
-  version = "0.8.1";
+  version = "0.9.1";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "taketwo";
     repo = "llm-ollama";
     tag = version;
-    hash = "sha256-9AgHX2FJRXSKZOLt7JR/9Fg4i2HGNQY2vSsJa4+2BGQ=";
+    hash = "sha256-NAJ0tfGRQOxYVAi2X0AI2d9+wyUS3ro1bfMSViZjaR0=";
   };
 
   build-system = [
@@ -42,19 +45,17 @@ buildPythonPackage rec {
 
   nativeCheckInputs = [
     pytestCheckHook
+    pytest-asyncio
+    writableTmpDirAsHomeHook
   ];
 
-  # These tests try to access the filesystem and fail
-  disabledTests = [
-    "test_registered_model"
-    "test_registered_chat_models"
-    "test_registered_embedding_models"
-    "test_registered_models_when_ollama_is_down"
-  ];
-
-  pythonImportCheck = [
+  pythonImportsCheck = [
     "llm_ollama"
   ];
+
+  passthru.tests = {
+    llm-plugin = callPackage ./tests/llm-plugin.nix { };
+  };
 
   meta = {
     description = "LLM plugin providing access to Ollama models using HTTP API";

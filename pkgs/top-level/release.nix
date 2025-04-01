@@ -36,7 +36,7 @@
       # so users choosing to allow don't have to rebuild them every time.
       permittedInsecurePackages = [
         "olm-3.2.16" # see PR #347899
-        "kanidm_1_3-1.3.3"
+        "kanidm_1_4-1.4.6"
       ];
     };
 
@@ -345,6 +345,7 @@ let
       agdaPackages = packagePlatforms pkgs.agdaPackages;
 
       pkgsLLVM.stdenv = [ "x86_64-linux" "aarch64-linux" ];
+      pkgsLLVMLibc.stdenv = [ "x86_64-linux" "aarch64-linux" ];
       pkgsArocc.stdenv = [ "x86_64-linux" "aarch64-linux" ];
       pkgsZig.stdenv = [ "x86_64-linux" "aarch64-linux" ];
       pkgsMusl.stdenv = [ "x86_64-linux" "aarch64-linux" ];

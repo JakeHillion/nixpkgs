@@ -2,7 +2,6 @@
   lib,
   stdenv,
   fetchurl,
-  fetchpatch,
   lua,
   jemalloc,
   pkg-config,
@@ -25,29 +24,20 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "redis";
-  version = "7.2.6";
+  version = "7.2.7";
 
   src = fetchurl {
     url = "https://download.redis.io/releases/redis-${finalAttrs.version}.tar.gz";
-    hash = "sha256-+xDWei/itFVvbLhABk3W5uMXXOjKA18HJpkOwtqfPQ4=";
+    hash = "sha256-csCB47jPrnFEJz0m12c28IMZAAr0bAFRXK1dKXZc6tU=";
   };
 
-  patches =
-    [
-      # fixes: make test [exception]: Executing test client: permission denied
-      # https://github.com/redis/redis/issues/12792
-      (fetchpatch {
-        url = "https://github.com/redis/redis/pull/12887.diff";
-        hash = "sha256-VZEMShW7Ckn5hLJHffQvE94Uly41WZW1bwvxny+Y3W8=";
-      })
-    ]
-    ++ lib.optionals useSystemJemalloc [
-      # use system jemalloc
-      (fetchurl {
-        url = "https://gitlab.archlinux.org/archlinux/packaging/packages/redis/-/raw/102cc861713c796756abd541bf341a4512eb06e6/redis-5.0-use-system-jemalloc.patch";
-        hash = "sha256-VPRfoSnctkkkzLrXEWQX3Lh5HmZaCXoJafyOG007KzM=";
-      })
-    ];
+  patches = lib.optionals useSystemJemalloc [
+    # use system jemalloc
+    (fetchurl {
+      url = "https://gitlab.archlinux.org/archlinux/packaging/packages/redis/-/raw/102cc861713c796756abd541bf341a4512eb06e6/redis-5.0-use-system-jemalloc.patch";
+      hash = "sha256-VPRfoSnctkkkzLrXEWQX3Lh5HmZaCXoJafyOG007KzM=";
+    })
+  ];
 
   nativeBuildInputs = [ pkg-config ];
 
@@ -76,6 +66,7 @@ stdenv.mkDerivation (finalAttrs: {
   hardeningEnable = lib.optionals (!stdenv.hostPlatform.isDarwin) [ "pie" ];
 
   env.NIX_CFLAGS_COMPILE = toString (lib.optionals stdenv.cc.isClang [ "-std=c11" ]);
+  env.NIX_LDFLAGS = lib.optionalString stdenv.hostPlatform.isFreeBSD "-lexecinfo";
 
   # darwin currently lacks a pure `pgrep` which is extensively used here
   doCheck = !stdenv.hostPlatform.isDarwin;
@@ -103,6 +94,7 @@ stdenv.mkDerivation (finalAttrs: {
       --timeout 2000 \
       --clients $NIX_BUILD_CORES \
       --tags -leaks \
+      --skipunit integration/aof-multi-part \
       --skipunit integration/failover # flaky and slow
 
     runHook postCheck

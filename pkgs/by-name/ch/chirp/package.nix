@@ -11,14 +11,14 @@
 
 python3Packages.buildPythonApplication {
   pname = "chirp";
-  version = "0.4.0-unstable-2025-01-12";
+  version = "0.4.0-unstable-2025-03-27";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "kk7ds";
     repo = "chirp";
-    rev = "fc94f14823f3257961c4d0e144083fe6f397ad55";
-    hash = "sha256-J1Hhz6M1VhfIttz9lJnPNQsOJbzKBrb6Yz154oh3moo=";
+    rev = "906aa9704dfd131fabbcb3ae2dbba33b7cc2a5da";
+    hash = "sha256-oRo26GB28wQ5gx+EgN/xyvOyA4IaObG0np05bFlJsF8=";
   };
 
   nativeBuildInputs = [
@@ -80,7 +80,8 @@ python3Packages.buildPythonApplication {
       emantor
       wrmilling
       nickcao
+      ethancedwards8
     ];
-    platforms = lib.platforms.linux;
+    platforms = lib.platforms.unix;
   };
 }

@@ -192,7 +192,7 @@ let
 
   mkDictFromXuxen =
     { shortName, srcs, shortDescription, longDescription, dictFileName }:
-    stdenv.mkDerivation rec {
+    stdenv.mkDerivation {
       pname = "hunspell-dict-${shortName}-xuxen";
       version = "5-2015.11.10";
 
@@ -213,7 +213,7 @@ let
       '';
 
       meta = with lib; {
-        homepage = "http://xuxen.eus/";
+        homepage = "https://xuxen.eus/";
         description = shortDescription;
         longDescription = longDescription;
         license = licenses.gpl2;
@@ -1033,7 +1033,7 @@ rec {
 
   /* Turkish */
   tr_TR = tr-tr;
-  tr-tr = mkDict rec {
+  tr-tr = mkDict {
     pname = "hunspell-dict-tr-tr";
     version = "1.1.1";
 

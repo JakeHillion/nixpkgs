@@ -4,7 +4,7 @@
   fetchurl,
 }:
 let
-  version = "0.17.8";
+  version = "0.17.11";
 in
 buildNpmPackage {
   pname = "svelte-language-server";
@@ -12,10 +12,10 @@ buildNpmPackage {
 
   src = fetchurl {
     url = "https://registry.npmjs.org/svelte-language-server/-/svelte-language-server-${version}.tgz";
-    hash = "sha256-IbLjoXLN8sdnGy5SmoEeJUl1BzCulptMFtbJc+IRH70=";
+    hash = "sha256-rmyn0DjYa+DWQt6Qw8aIW0BnceIv5ZGi7VQXBBXRAHY=";
   };
 
-  npmDepsHash = "sha256-2rCgzEkwht03jxusPCdemA8EOabwRsHeDxiV4Uf4K8g=";
+  npmDepsHash = "sha256-tc4AGUNKNUict31kDdx6LLbHZSYURZrHJK7d/wgfz54=";
 
   postPatch = ''
     ln -s ${./package-lock.json} package-lock.json

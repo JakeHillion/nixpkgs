@@ -1,24 +1,24 @@
 {
   lib,
-  buildGo123Module,
+  buildGoModule,
   fetchFromGitLab,
   installShellFiles,
   stdenv,
   nix-update-script,
 }:
 
-buildGo123Module rec {
+buildGoModule rec {
   pname = "glab";
-  version = "1.51.0";
+  version = "1.55.0";
 
   src = fetchFromGitLab {
     owner = "gitlab-org";
     repo = "cli";
     rev = "v${version}";
-    hash = "sha256-EWcoEm6DbRT0PP2qYhdwDHCkbeAG6vDVATPhX9pPfiw=";
+    hash = "sha256-K1zjb4QCLBp7GwT2580DXYKx3yTaIyNytKObMbzjvlQ=";
   };
 
-  vendorHash = "sha256-f6qAFeB9kshtQ2AW6OnEGSnhJYlJ2gAGRDplVmQSVNA=";
+  vendorHash = "sha256-ODTyWArYcCxsWbN9fuppAcRYtKGxcadeRPIwfPiAuOE=";
 
   ldflags = [
     "-s"

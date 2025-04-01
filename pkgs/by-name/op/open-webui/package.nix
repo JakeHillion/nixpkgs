@@ -4,22 +4,33 @@
   fetchFromGitHub,
   python312,
   nixosTests,
+  fetchurl,
 }:
 let
   pname = "open-webui";
-  version = "0.5.4";
+  version = "0.5.20";
 
   src = fetchFromGitHub {
     owner = "open-webui";
     repo = "open-webui";
     tag = "v${version}";
-    hash = "sha256-vlaJv4CbhjbJbiNZHKsedS2vBXp44oE/7ZALgkPASHI=";
+    hash = "sha256-GVUEKAuuLrVTVreEeGcIAsDSOltiQAHmWGM67C5RYt4=";
   };
 
-  frontend = buildNpmPackage {
+  frontend = buildNpmPackage rec {
     inherit pname version src;
 
-    npmDepsHash = "sha256-g47tK6BC6CE0hqdZbToQMB5QeNdufhO12xPrAjbfMTk=";
+    # the backend for run-on-client-browser python execution
+    # must match lock file in open-webui
+    # TODO: should we automate this?
+    # TODO: with JQ? "jq -r '.packages["node_modules/pyodide"].version' package-lock.json"
+    pyodideVersion = "0.27.2";
+    pyodide = fetchurl {
+      hash = "sha256-sZ47IxPiL1e12rmpH3Zv2v6L2+1tz/kIrT4uYbng+Ec=";
+      url = "https://github.com/pyodide/pyodide/releases/download/${pyodideVersion}/pyodide-${pyodideVersion}.tar.bz2";
+    };
+
+    npmDepsHash = "sha256-A84u/IMZX8JlyKXltvQFHZYFXSWPXsx2mr2WwT0Lraw=";
 
     # Disabling `pyodide:fetch` as it downloads packages during `buildPhase`
     # Until this is solved, running python packages from the browser will not work.
@@ -31,6 +42,10 @@ let
     env.CYPRESS_INSTALL_BINARY = "0"; # disallow cypress from downloading binaries in sandbox
     env.ONNXRUNTIME_NODE_INSTALL_CUDA = "skip";
     env.NODE_OPTIONS = "--max-old-space-size=8192";
+
+    preBuild = ''
+      tar xf ${pyodide} -C static/
+    '';
 
     installPhase = ''
       runHook preInstall
@@ -45,6 +60,8 @@ in
 python312.pkgs.buildPythonApplication rec {
   inherit pname version src;
   pyproject = true;
+
+  build-system = with python312.pkgs; [ hatchling ];
 
   # Not force-including the frontend build directory as frontend is managed by the `frontend` derivation above.
   postPatch = ''
@@ -62,89 +79,101 @@ python312.pkgs.buildPythonApplication rec {
     "pytest-docker"
   ];
 
-  dependencies = with python312.pkgs; [
-    aiocache
-    aiofiles
-    aiohttp
-    alembic
-    anthropic
-    apscheduler
-    argon2-cffi
-    async-timeout
-    authlib
-    bcrypt
-    beautifulsoup4
-    black
-    boto3
-    chromadb
-    colbert-ai
-    docx2txt
-    duckduckgo-search
-    einops
-    extract-msg
-    fake-useragent
-    fastapi
-    faster-whisper
-    flask
-    flask-cors
-    fpdf2
-    ftfy
-    google-api-python-client
-    google-auth-httplib2
-    google-auth-oauthlib
-    google-generativeai
-    googleapis-common-protos
-    iso-639
-    langchain
-    langchain-chroma
-    langchain-community
-    langdetect
-    langfuse
-    ldap3
-    markdown
-    nltk
-    openai
-    opencv-python-headless
-    openpyxl
-    opensearch-py
-    pandas
-    passlib
-    peewee
-    peewee-migrate
-    pgvector
-    psutil
-    psycopg2-binary
-    pydub
-    pyjwt
-    pymdown-extensions
-    pymilvus
-    pymongo
-    pymysql
-    pypandoc
-    pypdf
-    python-dotenv
-    python-jose
-    python-multipart
-    python-pptx
-    python-socketio
-    pytube
-    pyxlsb
-    qdrant-client
-    rank-bm25
-    rapidocr-onnxruntime
-    redis
-    requests
-    sentence-transformers
-    soundfile
-    tiktoken
-    unstructured
-    uvicorn
-    validators
-    xlrd
-    youtube-transcript-api
-  ];
-
-  build-system = with python312.pkgs; [ hatchling ];
+  dependencies =
+    with python312.pkgs;
+    [
+      aiocache
+      aiofiles
+      aiohttp
+      alembic
+      anthropic
+      apscheduler
+      argon2-cffi
+      asgiref
+      async-timeout
+      authlib
+      azure-ai-documentintelligence
+      azure-identity
+      azure-storage-blob
+      bcrypt
+      beautifulsoup4
+      black
+      boto3
+      chromadb
+      colbert-ai
+      docx2txt
+      duckduckgo-search
+      einops
+      elasticsearch
+      extract-msg
+      fake-useragent
+      fastapi
+      faster-whisper
+      firecrawl-py
+      fpdf2
+      ftfy
+      gcp-storage-emulator
+      google-api-python-client
+      google-auth-httplib2
+      google-auth-oauthlib
+      google-cloud-storage
+      google-generativeai
+      googleapis-common-protos
+      iso-639
+      langchain
+      langchain-community
+      langdetect
+      langfuse
+      ldap3
+      loguru
+      markdown
+      moto
+      nltk
+      openai
+      opencv-python-headless
+      openpyxl
+      opensearch-py
+      pandas
+      passlib
+      peewee
+      peewee-migrate
+      pgvector
+      playwright
+      psutil
+      psycopg2-binary
+      pydub
+      pyjwt
+      pymdown-extensions
+      pymilvus
+      pymongo
+      pymysql
+      pypandoc
+      pypdf
+      python-dotenv
+      python-jose
+      python-multipart
+      python-pptx
+      python-socketio
+      pytube
+      pyxlsb
+      qdrant-client
+      rank-bm25
+      rapidocr-onnxruntime
+      redis
+      requests
+      restrictedpython
+      sentence-transformers
+      sentencepiece
+      soundfile
+      tiktoken
+      transformers
+      unstructured
+      uvicorn
+      validators
+      xlrd
+      youtube-transcript-api
+    ]
+    ++ moto.optional-dependencies.s3;
 
   pythonImportsCheck = [ "open_webui" ];
 
@@ -155,6 +184,7 @@ python312.pkgs.buildPythonApplication rec {
       inherit (nixosTests) open-webui;
     };
     updateScript = ./update.sh;
+    inherit frontend;
   };
 
   meta = {

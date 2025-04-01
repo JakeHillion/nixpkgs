@@ -69,10 +69,17 @@ let
     groupByPlatform
     extractPackageNames
     getLabels
-    uniqueStrings
     ;
 
-  getAttrs = dir: builtins.fromJSON (builtins.readFile "${dir}/outpaths.json");
+  getAttrs =
+    dir:
+    let
+      raw = builtins.readFile "${dir}/outpaths.json";
+      # The file contains Nix paths; we need to ignore them for evaluation purposes,
+      # else there will be a "is not allowed to refer to a store path" error.
+      data = builtins.unsafeDiscardStringContext raw;
+    in
+    builtins.fromJSON data;
   beforeAttrs = getAttrs beforeResultDir;
   afterAttrs = getAttrs afterResultDir;
 
@@ -81,7 +88,7 @@ let
   # - values: lists of `packagePlatformPath`s
   diffAttrs = diff beforeAttrs afterAttrs;
 
-  rebuilds = uniqueStrings (diffAttrs.added ++ diffAttrs.changed);
+  rebuilds = diffAttrs.added ++ diffAttrs.changed;
   rebuildsPackagePlatformAttrs = convertToPackagePlatformAttrs rebuilds;
 
   changed-paths =
@@ -110,7 +117,7 @@ let
     );
 
   maintainers = import ./maintainers.nix {
-    changedattrs = lib.unique (map (a: a.packagePath) rebuildsPackagePlatformAttrs);
+    changedattrs = lib.attrNames (lib.groupBy (a: a.name) rebuildsPackagePlatformAttrs);
     changedpathsjson = touchedFilesJson;
   };
 in

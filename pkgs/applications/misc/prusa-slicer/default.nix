@@ -6,8 +6,7 @@
 , cmake
 , pkg-config
 , wrapGAppsHook3
-, boost
-, boost183
+, boost186
 , cereal
 , cgal
 , curl
@@ -42,7 +41,7 @@
 , opencascade-override ? null
 }:
 let
-  wxGTK-prusa = wxGTK32.overrideAttrs (old: rec {
+  wxGTK-prusa = wxGTK32.overrideAttrs (old: {
     pname = "wxwidgets-prusa3d-patched";
     version = "3.2.0";
     configureFlags = old.configureFlags ++ [ "--disable-glcanvasegl" ];
@@ -69,22 +68,10 @@ let
   openvdb_tbb_2021_8 = openvdb.override { tbb = tbb_2021_11; };
   wxGTK-override' = if wxGTK-override == null then wxGTK-prusa else wxGTK-override;
   opencascade-override' = if opencascade-override == null then opencascade-occt_7_6_1 else opencascade-override;
-
-  patches = [
-  ];
-
-  # Build requires at least Boost v1.83.  If the mainline package satisfies
-  # that, just use the mainline package, otherwise use an explicitly versioned
-  # package.
-  boost183OrBetter =
-    if lib.versionAtLeast boost.version "1.83"
-    then boost
-    else boost183;
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "prusa-slicer";
   version = "2.9.0";
-  inherit patches;
 
   src = fetchFromGitHub {
     owner = "prusa3d";
@@ -92,6 +79,12 @@ stdenv.mkDerivation (finalAttrs: {
     hash = "sha256-6BrmTNIiu6oI/CbKPKoFQIh1aHEVfJPIkxomQou0xKk=";
     rev = "version_${finalAttrs.version}";
   };
+
+  # https://github.com/prusa3d/PrusaSlicer/pull/14010
+  patches = [(fetchpatch {
+    url = "https://github.com/prusa3d/PrusaSlicer/commit/cdc3db58f9002778a0ca74517865527f50ade4c3.patch";
+    hash = "sha256-zgpGg1jtdnCBaWjR6oUcHo5sGuZx5oEzpux3dpRdMAM=";
+  })];
 
   # required for GCC 14
   # (not applicable to super-slicer fork)
@@ -111,7 +104,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildInputs = [
     binutils
-    boost183OrBetter
+    boost186  # does not build with 1.87, see https://github.com/prusa3d/PrusaSlicer/issues/13799
     cereal
     cgal
     curl

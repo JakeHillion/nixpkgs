@@ -18,16 +18,16 @@
 # (to make gems behave if necessary).
 
 { lib, fetchurl, fetchpatch, fetchpatch2, writeScript, ruby, libkrb5, libxml2, libxslt, python2, stdenv, which
-, libiconv, postgresql, nodejs, clang, sqlite, zlib, imagemagick, lasem
+, libiconv, libpq, nodejs, clang, sqlite, zlib, imagemagick, lasem
 , pkg-config , ncurses, xapian, gpgme, util-linux, tzdata, icu, libffi
 , cmake, libssh2, openssl, openssl_1_1, libmysqlclient, git, perl, pcre2, gecode_3, curl
 , libsodium, snappy, libossp_uuid, lxc, libpcap, xorg, gtk3, lerc, buildRubyGem
 , cairo, expat, re2, rake, gobject-introspection, gdk-pixbuf, zeromq, czmq, graphicsmagick, libcxx
-, file, libvirt, glib, vips, taglib, libopus, linux-pam, libidn, protobuf, fribidi, harfbuzz
+, file, libvirt, glib, vips, taglib_1, libopus, linux-pam, libidn, protobuf, fribidi, harfbuzz
 , bison, flex, pango, python3, patchelf, binutils, freetds, wrapGAppsHook3, atk
 , bundler, libsass, dart-sass, libexif, libselinux, libsepol, shared-mime-info, libthai, libdatrie
 , CoreServices, DarwinTools, cctools, libtool, discount, exiv2, libepoxy, libxkbcommon, libmaxminddb, libyaml
-, cargo, rustc, rustPlatform, libsysprof-capture
+, cargo, rustc, rustPlatform, libsysprof-capture, imlib2
 , autoSignDarwinBinariesHook
 }@args:
 
@@ -209,6 +209,17 @@ in
     '';
   };
 
+  mini_racer = attrs: {
+    buildFlags = [
+      "--with-v8-dir=\"${nodejs.libv8}\""
+    ];
+    dontBuild = false;
+    postPatch = ''
+      substituteInPlace ext/mini_racer_extension/extconf.rb \
+        --replace Libv8.configure_makefile '$CPPFLAGS += " -x c++"; Libv8.configure_makefile'
+    '';
+  };
+
   do_sqlite3 = attrs: {
     buildInputs = [ sqlite ];
   };
@@ -307,8 +318,7 @@ in
       substituteInPlace lib/prometheus/client/page_size.rb --replace "getconf" "${lib.getBin getconf}/bin/getconf"
     '';
   } // lib.optionalAttrs (lib.versionAtLeast attrs.version "1.0") {
-    cargoRoot = "ext/fast_mmaped_file_rs";
-    cargoDeps = rustPlatform.fetchCargoTarball {
+    cargoDeps = rustPlatform.fetchCargoVendor {
       src = stdenv.mkDerivation {
         inherit (buildRubyGem { inherit (attrs) gemName version source; })
           name
@@ -319,28 +329,27 @@ in
         dontBuilt = true;
         installPhase = ''
           cp -R ext/fast_mmaped_file_rs $out
+          cp Cargo.lock $out
         '';
       };
-      hash = if lib.versionAtLeast attrs.version "1.1.2"
-        then "sha256-pNzW2fQZDcuqu8apv3GU7lUC/H1cX5WRifBBQlbE8+s="
-        else
-          if lib.versionAtLeast attrs.version "1.1.1"
-          then "sha256-RsN5XWX7Mj2ORccM0eczY+44WXsbXNTnJVcCMvnOATk="
-          else "sha256-XuQZPbFWqPHlrJvllkvLl1FjKeoAUbi8oKDrS2rY1KM=";
+      hash = "sha256-KVbmDAa9EFwTUTHPF/8ZzycbieMhAuiidiz5rqGIKOo=";
     };
+
     nativeBuildInputs = [
       cargo
       rustc
       rustPlatform.cargoSetupHook
       rustPlatform.bindgenHook
     ];
+
     disallowedReferences = [
       rustc.unwrapped
     ];
-    preBuild = ''
-      cat ../.cargo/config.toml > ext/fast_mmaped_file_rs/.cargo/config.toml
-      sed -i "s|cargo-vendor-dir|$PWD/../cargo-vendor-dir|" ext/fast_mmaped_file_rs/.cargo/config.toml
+
+    preInstall = ''
+      export CARGO_HOME="$PWD/../.cargo/"
     '';
+
     postInstall = ''
       find $out -type f -name .rustc_info.json -delete
     '';
@@ -477,29 +486,6 @@ in
     '';
   };
 
-  # note that you need version >= v3.16.14.8,
-  # otherwise the gem will fail to link to the libv8 binary.
-  # see: https://github.com/cowboyd/libv8/pull/161
-  libv8 = attrs: {
-    buildInputs = [ which nodejs.libv8 python2 ];
-    buildFlags = [ "--with-system-v8=true" ];
-    dontBuild = false;
-    # The gem includes broken symlinks which are ignored during unpacking, but
-    # then fail during build. Since the content is missing anyway, touching the
-    # files is enough to unblock the build.
-    preBuild = ''
-      touch vendor/depot_tools/cbuildbot vendor/depot_tools/chrome_set_ver vendor/depot_tools/cros_sdk
-    '';
-    postPatch = ''
-      substituteInPlace ext/libv8/extconf.rb \
-        --replace "location = Libv8::Location::Vendor.new" \
-                  "location = Libv8::Location::System.new"
-    '';
-    meta.broken = true; # At 2023-01-20, errors as:
-                        #   "Failed to build gem native extension."
-                        # Requires Python 2. Project is abandoned.
-  };
-
   execjs = attrs: {
     propagatedBuildInputs = [ nodejs.libv8 ];
   };
@@ -554,6 +540,10 @@ in
       rpath="$(patchelf --print-rpath "$soPath")"
       patchelf --set-rpath "${lib.makeLibraryPath [ lasem glib cairo ]}:$rpath" "$soPath"
       patchelf --replace-needed liblasem.so liblasem-0.4.so "$soPath"
+    ''  + lib.optionalString stdenv.hostPlatform.isDarwin ''
+      soPath="$out/${ruby.gemPath}/gems/mathematical-${attrs.version}/lib/mathematical/mathematical.bundle"
+      install_name_tool -add_rpath "${lib.makeLibraryPath [ lasem glib cairo ]}/lib" "$soPath"
+      install_name_tool -change @rpath/liblasem.dylib "${lib.getLib lasem}/lib/liblasem-0.4.dylib" "$soPath"
     '';
   };
 
@@ -660,7 +650,15 @@ in
     # an unnecessary reference to the entire postgresql package.
     buildFlags = [ "--with-pg-config=ignore" ];
     nativeBuildInputs = [ pkg-config ];
-    buildInputs = [ postgresql ];
+    buildInputs = [ libpq ];
+  };
+
+  rszr = attrs: {
+    buildInputs = [
+      imlib2
+      imlib2.dev
+    ];
+    buildFlags = [ "--without-imlib2-config" ];
   };
 
   psych = attrs: {
@@ -813,7 +811,7 @@ in
   };
 
   sequel_pg = attrs: {
-    buildInputs = [ postgresql ];
+    buildInputs = [ libpq ];
   };
 
   snappy = attrs: {
@@ -848,7 +846,7 @@ in
   };
 
   taglib-ruby = attrs: {
-    buildInputs = [ taglib ];
+    buildInputs = [ taglib_1 ];
   };
 
   timfel-krb5-auth = attrs: {
