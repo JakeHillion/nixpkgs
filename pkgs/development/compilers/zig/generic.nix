@@ -7,6 +7,7 @@
   xcbuild,
   targetPackages,
   libxml2,
+  ninja,
   zlib,
   coreutils,
   callPackage,
@@ -35,6 +36,7 @@ stdenv.mkDerivation (finalAttrs: {
     [
       cmake
       (lib.getDev llvmPackages.llvm.dev)
+      ninja
     ]
     ++ lib.optionals stdenv.hostPlatform.isDarwin [
       # provides xcode-select, which is required for SDK detection
@@ -156,7 +158,7 @@ stdenv.mkDerivation (finalAttrs: {
       nixSupport.cc-cflags =
         [
           "-target"
-          "${stdenv.targetPlatform.parsed.cpu.name}-${stdenv.targetPlatform.parsed.kernel.name}-${stdenv.targetPlatform.parsed.abi.name}"
+          "${stdenv.targetPlatform.config}"
         ]
         ++ lib.optional (
           stdenv.targetPlatform.isLinux && !(stdenv.targetPlatform.isStatic or false)

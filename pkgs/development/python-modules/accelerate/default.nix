@@ -3,6 +3,7 @@
   lib,
   buildPythonPackage,
   fetchFromGitHub,
+  fetchpatch,
   pythonAtLeast,
 
   # buildInputs
@@ -42,6 +43,14 @@ buildPythonPackage rec {
     tag = "v${version}";
     hash = "sha256-J4eDm/PcyKK3256l6CAWUj4AWTB6neTKgxbBmul0BPE=";
   };
+
+  patches = [
+    # Fix tests on darwin: https://github.com/huggingface/accelerate/pull/3464
+    (fetchpatch {
+      url = "https://github.com/huggingface/accelerate/commit/8b31a2fe2c6d0246fff9885fb1f8456fb560abc7.patch";
+      hash = "sha256-Ek9Ou4Y/H1jt3qanf2g3HowBoTsN/bn4yV9O3ogcXMo=";
+    })
+  ];
 
   buildInputs = [ llvmPackages.openmp ];
 
@@ -92,8 +101,9 @@ buildPythonPackage rec {
       # set the environment variable, CC, which conflicts with standard environment
       "test_patch_environment_key_exists"
     ]
-    ++ lib.optionals (pythonAtLeast "3.13") [
+    ++ lib.optionals ((pythonAtLeast "3.13") || (torch.rocmSupport or false)) [
       # RuntimeError: Dynamo is not supported on Python 3.13+
+      # OR torch.compile tests broken on torch 2.5 + rocm
       "test_can_unwrap_distributed_compiled_model_keep_torch_compile"
       "test_can_unwrap_distributed_compiled_model_remove_torch_compile"
       "test_convert_to_fp32"

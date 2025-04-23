@@ -35,13 +35,13 @@ in
 
 rustPlatform.buildRustPackage rec {
   pname = "gitbutler";
-  version = "0.14.13";
+  version = "0.14.16";
 
   src = fetchFromGitHub {
     owner = "gitbutlerapp";
     repo = "gitbutler";
     tag = "release/${version}";
-    hash = "sha256-FEqlHTc7QzosjFfPYl1VgEZVJPweiaNmDzLmC6PHsA4=";
+    hash = "sha256-SbxoLlXa6ZouZPY4P29ol9caDrM9XyJyBl35Wemmh9Y=";
   };
 
   # Let Tauri know what version we're building
@@ -60,11 +60,11 @@ rustPlatform.buildRustPackage rec {
   '';
 
   useFetchCargoVendor = true;
-  cargoHash = "sha256-vNvjUYLzwN/AjRUOXaQBstmW2LyFZBHcVdBG674ZJCA=";
+  cargoHash = "sha256-VlGHexsNOwipyKiotWYgt8E+x6C22a7xW2Zft39FeJE=";
 
   pnpmDeps = pnpm_9.fetchDeps {
     inherit pname version src;
-    hash = "sha256-egCJ3rcRrtMpj9AH1rx5uRT0SRho611Gx9ggVRmjFmc=";
+    hash = "sha256-Zf/n49nb1PcE3RMeBoN3EAershxQh1AO8Hx9m3NV9XM=";
   };
 
   nativeBuildInputs = [

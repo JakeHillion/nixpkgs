@@ -44,6 +44,8 @@ stdenv.mkDerivation rec {
     hash = "sha256-zk4jkXJMh6wpuEKaCvuKUDod+F8B/6W5Lw8gwelcPEM=";
   };
 
+  patches = lib.optionals stdenv.hostPlatform.isDarwin [ ./generate_embedded_data_header.patch ];
+
   # libcxx (as of llvm-19) does not yet support `stop_token` and `jthread`
   # without the -fexperimental-library flag. Tiledb adds its own
   # implementations in the std namespace which conflict with libcxx. This

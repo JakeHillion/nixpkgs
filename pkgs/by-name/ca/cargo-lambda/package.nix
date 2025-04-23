@@ -14,17 +14,17 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "cargo-lambda";
-  version = "1.8.0";
+  version = "1.8.3";
 
   src = fetchFromGitHub {
     owner = "cargo-lambda";
     repo = "cargo-lambda";
     tag = "v${version}";
-    hash = "sha256-mgGmqenCizrP3KHOE6t0Yk6ARuMH4tLo4FyyRzDe7dQ=";
+    hash = "sha256-XaCbKasPFmhoiZymnP7aeRkz0za4cJeA98uWkgotuZ8=";
   };
 
   useFetchCargoVendor = true;
-  cargoHash = "sha256-XfznyrSc1J31hZf0lUJCnqFlmiTl+lD2XCX/aabPhHc=";
+  cargoHash = "sha256-gqahTN7wV4xn4xQK+fDnjxtAFp4LSvI3H93XQgHf4fM=";
 
   nativeCheckInputs = [ cacert ];
 
@@ -52,6 +52,9 @@ rustPlatform.buildRustPackage rec {
   '';
 
   CARGO_LAMBDA_BUILD_INFO = "(nixpkgs)";
+
+  cargoBuildFlags = [ "--features=skip-build-banner" ];
+  cargoCheckFlags = [ "--features=skip-build-banner" ];
 
   checkFlags = lib.optionals stdenv.hostPlatform.isDarwin [
     # Fails in darwin sandbox, first because of trying to listen to a port on

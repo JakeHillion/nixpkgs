@@ -22,14 +22,14 @@ let
 in
 python.pkgs.buildPythonApplication rec {
   pname = "esphome";
-  version = "2025.3.2";
+  version = "2025.4.0";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     tag = version;
-    hash = "sha256-Wioi1k/Eo3rlh8qMnDDDIvRNQXWoxlmRRvjHLs01skY=";
+    hash = "sha256-qK/vQQdgtYrWUglVaBWDcTbgeDUrDB4rpQ+4q65Hre4=";
   };
 
   build-systems = with python.pkgs; [
@@ -50,8 +50,7 @@ python.pkgs.buildPythonApplication rec {
 
   postPatch = ''
     substituteInPlace pyproject.toml \
-      --replace-fail "setuptools==" "setuptools>=" \
-      --replace-fail "wheel~=" "wheel>="
+      --replace-fail "setuptools==" "setuptools>="
 
     # ensure component dependencies are available
     cat requirements_optional.txt >> requirements.txt

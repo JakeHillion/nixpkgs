@@ -2,9 +2,7 @@
   lib,
   config,
   stdenv,
-  aws-sdk-cpp,
-  boehmgc,
-  callPackage,
+  nixDependencies,
   generateSplicesForMkScope,
   fetchFromGitHub,
   fetchpatch2,
@@ -20,99 +18,37 @@
   confDir ? "/etc",
 }:
 let
-  boehmgc-nix_2_3 = boehmgc.override { enableLargeConfig = true; };
 
-  boehmgc-nix = boehmgc-nix_2_3.overrideAttrs (drv: {
-    patches = (drv.patches or [ ]) ++ [
-      # Part of the GC solution in https://github.com/NixOS/nix/pull/4944
-      ./patches/boehmgc-coroutine-sp-fallback.patch
-    ];
-  });
-
-  # old nix fails to build with newer aws-sdk-cpp and the patch doesn't apply
-  aws-sdk-cpp-old-nix =
-    (aws-sdk-cpp.override {
-      apis = [
-        "s3"
-        "transfer"
-      ];
-      customMemoryManagement = false;
-    }).overrideAttrs
-      (args: rec {
-        # intentionally overriding postPatch
-        version = "1.9.294";
-
-        src = fetchFromGitHub {
-          owner = "aws";
-          repo = "aws-sdk-cpp";
-          rev = version;
-          hash = "sha256-Z1eRKW+8nVD53GkNyYlZjCcT74MqFqqRMeMc33eIQ9g=";
-        };
-        postPatch =
-          ''
-            # Avoid blanket -Werror to evade build failures on less
-            # tested compilers.
-            substituteInPlace cmake/compiler_settings.cmake \
-              --replace '"-Werror"' ' '
-
-            # Missing includes for GCC11
-            sed '5i#include <thread>' -i \
-              aws-cpp-sdk-cloudfront-integration-tests/CloudfrontOperationTest.cpp \
-              aws-cpp-sdk-cognitoidentity-integration-tests/IdentityPoolOperationTest.cpp \
-              aws-cpp-sdk-dynamodb-integration-tests/TableOperationTest.cpp \
-              aws-cpp-sdk-elasticfilesystem-integration-tests/ElasticFileSystemTest.cpp \
-              aws-cpp-sdk-lambda-integration-tests/FunctionTest.cpp \
-              aws-cpp-sdk-mediastore-data-integration-tests/MediaStoreDataTest.cpp \
-              aws-cpp-sdk-queues/source/sqs/SQSQueue.cpp \
-              aws-cpp-sdk-redshift-integration-tests/RedshiftClientTest.cpp \
-              aws-cpp-sdk-s3-crt-integration-tests/BucketAndObjectOperationTest.cpp \
-              aws-cpp-sdk-s3-integration-tests/BucketAndObjectOperationTest.cpp \
-              aws-cpp-sdk-s3control-integration-tests/S3ControlTest.cpp \
-              aws-cpp-sdk-sqs-integration-tests/QueueOperationTest.cpp \
-              aws-cpp-sdk-transfer-tests/TransferTests.cpp
-            # Flaky on Hydra
-            rm aws-cpp-sdk-core-tests/aws/auth/AWSCredentialsProviderTest.cpp
-            # Includes aws-c-auth private headers, so only works with submodule build
-            rm aws-cpp-sdk-core-tests/aws/auth/AWSAuthSignerTest.cpp
-            # TestRandomURLMultiThreaded fails
-            rm aws-cpp-sdk-core-tests/http/HttpClientTest.cpp
-          ''
-          + lib.optionalString aws-sdk-cpp.stdenv.hostPlatform.isi686 ''
-            # EPSILON is exceeded
-            rm aws-cpp-sdk-core-tests/aws/client/AdaptiveRetryStrategyTest.cpp
-          '';
-
-        patches = (args.patches or [ ]) ++ [ ./patches/aws-sdk-cpp-TransferManager-ContentEncoding.patch ];
-
-        # only a stripped down version is build which takes a lot less resources to build
-        requiredSystemFeatures = [ ];
-      });
-
-  aws-sdk-cpp-nix =
-    (aws-sdk-cpp.override {
-      apis = [
-        "s3"
-        "transfer"
-      ];
-      customMemoryManagement = false;
-    }).overrideAttrs
+  # Called for Nix < 2.26
+  commonAutoconf =
+    args:
+    nixDependencies.callPackage
+      (import ./common-autoconf.nix ({ inherit lib fetchFromGitHub; } // args))
       {
-        # only a stripped down version is build which takes a lot less resources to build
-        requiredSystemFeatures = [ ];
+        inherit
+          Security
+          storeDir
+          stateDir
+          confDir
+          ;
+        aws-sdk-cpp =
+          if lib.versionAtLeast args.version "2.12pre" then
+            nixDependencies.aws-sdk-cpp
+          else
+            nixDependencies.aws-sdk-cpp-old;
       };
 
-  common =
+  # Called for Nix == 2.28. Transitional until we always use
+  # per-component packages.
+  commonMeson =
     args:
-    callPackage (import ./common.nix ({ inherit lib fetchFromGitHub; } // args)) {
+    nixDependencies.callPackage (import ./common-meson.nix ({ inherit lib fetchFromGitHub; } // args)) {
       inherit
         Security
         storeDir
         stateDir
         confDir
         ;
-      boehmgc = boehmgc-nix;
-      aws-sdk-cpp =
-        if lib.versionAtLeast args.version "2.12pre" then aws-sdk-cpp-nix else aws-sdk-cpp-old-nix;
     };
 
   # https://github.com/NixOS/nix/pull/7585
@@ -219,48 +155,54 @@ lib.makeExtensible (
   (
     {
       nix_2_3 =
-        (
-          (common {
-            version = "2.3.18";
-            hash = "sha256-jBz2Ub65eFYG+aWgSI3AJYvLSghio77fWQiIW1svA9U=";
-            patches = [
-              patch-monitorfdhup
-            ];
-            self_attribute_name = "nix_2_3";
-            maintainers = with lib.maintainers; [ flokli ];
-          }).override
-          { boehmgc = boehmgc-nix_2_3; }
-        ).overrideAttrs
+        (commonAutoconf {
+          version = "2.3.18";
+          hash = "sha256-jBz2Ub65eFYG+aWgSI3AJYvLSghio77fWQiIW1svA9U=";
+          patches = [
+            patch-monitorfdhup
+          ];
+          self_attribute_name = "nix_2_3";
+          maintainers = with lib.maintainers; [ flokli ];
+        }).overrideAttrs
           {
             # https://github.com/NixOS/nix/issues/10222
             # spurious test/add.sh failures
             enableParallelChecking = false;
           };
 
-      nix_2_24 = common {
-        version = "2.24.13";
-        hash = "sha256-lUsK8lAwaaTEM+KFML/6sYwaVAiSf70g1EfSDJNNrU0=";
+      nix_2_24 = commonAutoconf {
+        version = "2.24.14";
+        hash = "sha256-SthMCsj6POjawLnJq9+lj/UzObX9skaeN1UGmMZiwTY=";
         self_attribute_name = "nix_2_24";
       };
 
-      nix_2_25 = common {
-        version = "2.25.5";
-        hash = "sha256-9xrQhrqHCSqWsQveykZvG/ZMu0se66fUQw3xVSg6BpQ=";
-        self_attribute_name = "nix_2_25";
+      nix_2_26 = commonMeson {
+        version = "2.26.3";
+        hash = "sha256-5ZV8YqU8mfFmoAMiUEuBqNwk0T3vUR//x1D12BiYCeY=";
+        self_attribute_name = "nix_2_26";
       };
 
-      nixComponents_2_26 = (
-        callPackage ./vendor/2_26/componentized.nix {
-          inherit (self.nix_2_24.meta) maintainers;
-          otherSplices = generateSplicesForNixComponents "nixComponents_2_26";
-        }
-      );
+      nix_2_28 = commonMeson {
+        version = "2.28.1";
+        hash = "sha256-R+HAPvD+AjiyRHZP/elkvka33G499EKT8ntyF/EPPRI=";
+        self_attribute_name = "nix_2_28";
+      };
 
-      # Note, this might eventually become an alias, as packages should
-      # depend on the components they need in `nixComponents_2_26`.
-      nix_2_26 = addTests "nix_2_26" self.nixComponents_2_26.nix-everything;
+      nixComponents_git = nixDependencies.callPackage ./modular/packages.nix rec {
+        version = "2.29pre20250409_${lib.substring 0 8 src.rev}";
+        inherit (self.nix_2_24.meta) maintainers;
+        otherSplices = generateSplicesForNixComponents "nixComponents_git";
+        src = fetchFromGitHub {
+          owner = "NixOS";
+          repo = "nix";
+          rev = "e76bbe413e86e3208bb9824e339d59af25327101";
+          hash = "sha256-Aqnj5+sA7B4ZRympuyfWPPK83iomKHEHMYhlwslI8iA=";
+        };
+      };
 
-      latest = self.nix_2_26;
+      git = addTests "git" self.nixComponents_git.nix-everything;
+
+      latest = self.nix_2_28;
 
       # The minimum Nix version supported by Nixpkgs
       # Note that some functionality *might* have been backported into this Nix version,
@@ -280,7 +222,7 @@ lib.makeExtensible (
           nix;
 
       # Read ./README.md before bumping a major release
-      stable = addFallbackPathsCheck self.nix_2_24;
+      stable = addFallbackPathsCheck self.nix_2_28;
     }
     // lib.optionalAttrs config.allowAliases (
       lib.listToAttrs (
@@ -293,8 +235,11 @@ lib.makeExtensible (
         ) (lib.range 4 23)
       )
       // {
+        nixComponents_2_27 = throw "nixComponents_2_27 has been removed. use nixComponents_git.";
+        nix_2_27 = throw "nix_2_27 has been removed. use nix_2_28.";
+        nix_2_25 = throw "nix_2_25 has been removed. use nix_2_28.";
+
         unstable = throw "nixVersions.unstable has been removed. use nixVersions.latest or the nix flake.";
-        git = throw "nixVersions.git has been removed. use nixVersions.latest or the nix flake.";
       }
     )
   )

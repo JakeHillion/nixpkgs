@@ -297,6 +297,8 @@ lib.makeScope pkgs.newScope (
 
         event = callPackage ../development/php-packages/event { };
 
+        excimer = callPackage ../development/php-packages/excimer { };
+
         gnupg = callPackage ../development/php-packages/gnupg { };
 
         grpc = callPackage ../development/php-packages/grpc { };
@@ -428,7 +430,13 @@ lib.makeScope pkgs.newScope (
                 configureFlags = [ "--with-bz2=${bzip2.dev}" ];
               }
               { name = "calendar"; }
-              { name = "ctype"; }
+              {
+                name = "ctype";
+                postPatch = lib.optionalString stdenv.hostPlatform.isDarwin ''
+                  # Broken test on aarch64-darwin
+                  rm ext/ctype/tests/lc_ctype_inheritance.phpt
+                '';
+              }
               {
                 name = "curl";
                 buildInputs = [ curl ];
@@ -640,7 +648,7 @@ lib.makeScope pkgs.newScope (
               {
                 name = "pdo_pgsql";
                 internalDeps = [ php.extensions.pdo ];
-                configureFlags = [ "--with-pdo-pgsql=${lib.getDev libpq}" ];
+                configureFlags = [ "--with-pdo-pgsql=${libpq.pg_config}" ];
                 doCheck = false;
               }
               {
@@ -655,7 +663,7 @@ lib.makeScope pkgs.newScope (
                 buildInputs = [
                   pcre2
                 ];
-                configureFlags = [ "--with-pgsql=${lib.getDev libpq}" ];
+                configureFlags = [ "--with-pgsql=${libpq.pg_config}" ];
                 doCheck = false;
               }
               {
