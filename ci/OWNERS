@@ -16,7 +16,7 @@
 # CI
 /.github/*_TEMPLATE*                    @SigmaSquadron
 /.github/workflows                      @NixOS/Security @Mic92 @zowoq @infinisil @azuwis @wolfgangwalther
-/.github/workflows/check-nix-format.yml @infinisil @wolfgangwalther
+/.github/workflows/check-format.yml     @infinisil @wolfgangwalther
 /.github/workflows/codeowners-v2.yml    @infinisil @wolfgangwalther
 /.github/workflows/nixpkgs-vet.yml      @infinisil @philiptaron @wolfgangwalther
 /ci                                     @infinisil @philiptaron @NixOS/Security @wolfgangwalther
@@ -466,3 +466,9 @@ pkgs/development/beam-modules/          @NixOS/beam
 pkgs/development/interpreters/erlang/   @NixOS/beam
 pkgs/development/interpreters/elixir/   @NixOS/beam
 pkgs/development/interpreters/lfe/      @NixOS/beam
+
+# OctoDNS
+pkgs/by-name/oc/octodns/ @anthonyroussel
+
+# Teleport
+pkgs/servers/teleport   @arianvp @justinas @sigma @tomberek @freezeboy @techknowlogick @JuliusFreudenberger

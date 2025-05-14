@@ -3,7 +3,6 @@
   stdenvNoCC,
   fetchurl,
   nixosTests,
-  nextcloud29Packages,
   nextcloud30Packages,
   nextcloud31Packages,
 }:
@@ -44,7 +43,7 @@ let
         changelog = "https://nextcloud.com/changelog/#${lib.replaceStrings [ "." ] [ "-" ] version}";
         description = "Sharing solution for files, calendars, contacts and more";
         homepage = "https://nextcloud.com";
-        maintainers = lib.teams.nextcloud.members;
+        teams = [ lib.teams.nextcloud ];
         license = lib.licenses.agpl3Plus;
         platforms = lib.platforms.linux;
         knownVulnerabilities =
@@ -53,12 +52,6 @@ let
     };
 in
 {
-  nextcloud29 = generic {
-    version = "29.0.16";
-    hash = "sha256-SZv2GrGe3NTlQq+GYJJDxbT0QOtbsGwrp9oML6pSUyI=";
-    packages = nextcloud29Packages;
-  };
-
   nextcloud30 = generic {
     version = "30.0.10";
     hash = "sha256-40ldF8X1yRZFQtk/Y21pasyPOLYL7HDPGtLnnHbZlbo=";

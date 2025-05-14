@@ -81,6 +81,12 @@ stdenv.mkDerivation (finalAttrs: rec {
       url = "https://gitlab.freedesktop.org/poppler/poppler/-/commit/0554731052d1a97745cb179ab0d45620589dd9c4.patch";
       hash = "sha256-I78wJ4l1DSh+x/e00ZL8uvrGdBH+ufp+EDm0A1XWyCU=";
     })
+    (fetchpatch {
+      # https://nvd.nist.gov/vuln/detail/CVE-2025-43903
+      name = "CVE-2025-43903.patch";
+      url = "https://gitlab.freedesktop.org/poppler/poppler/-/commit/f1b9c830f145a0042e853d6462b2f9ca4016c669.patch";
+      hash = "sha256-wZ8fqIAmMnQDf64sWXjfpkhk8TLDWMPUGxz40ktAzFI=";
+    })
 
     (fetchpatch {
       # fixes build on clang-19
@@ -207,6 +213,7 @@ stdenv.mkDerivation (finalAttrs: rec {
     '';
     license = with lib.licenses; [ gpl2Plus ];
     platforms = lib.platforms.all;
-    maintainers = with lib.maintainers; [ ttuegel ] ++ lib.teams.freedesktop.members;
+    maintainers = with lib.maintainers; [ ttuegel ];
+    teams = [ lib.teams.freedesktop ];
   };
 })
