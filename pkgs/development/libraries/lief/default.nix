@@ -17,13 +17,13 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "lief";
-  version = "0.16.4";
+  version = "0.16.6";
 
   src = fetchFromGitHub {
     owner = "lief-project";
     repo = "LIEF";
     tag = finalAttrs.version;
-    hash = "sha256-3rLnT/zs7YrAYNc8I2EJevl98LHGcXFf7bVlJJfxqRc=";
+    hash = "sha256-SvwFyhIBuG0u5rE7+1OaO7VZu4/X4jVI6oFOm5+yCd8=";
   };
 
   outputs = [

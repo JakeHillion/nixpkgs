@@ -11,17 +11,17 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "sheldon";
-  version = "0.8.1";
+  version = "0.8.3";
 
   src = fetchFromGitHub {
     owner = "rossmacarthur";
-    repo = pname;
+    repo = "sheldon";
     rev = version;
-    hash = "sha256-C4rGE+tKlpEJabyGAexIoPmUiLvl87GkL6XH5aJHCrU=";
+    hash = "sha256-+NtiscyNlrXNNj3njvdZQB8dHs/PBYpEo9VwodEOtDs=";
   };
 
   useFetchCargoVendor = true;
-  cargoHash = "sha256-5Ho41WU/DzAdBOGDPmJYipcJMAji6J+Jg8lNQYionng=";
+  cargoHash = "sha256-O9v77mwOeTnT4LetcrzQjdd3MDXDbpptUODMAVBwZv8=";
 
   buildInputs =
     [ openssl ]

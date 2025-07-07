@@ -16,7 +16,7 @@
   rocmPackages,
   rocmGpuTargets ? rocmPackages.clr.localGpuTargets or (rocmPackages.clr.gpuTargets or [ ]),
   cudaPackages,
-  cudaArches ? cudaPackages.cudaFlags.realArches or [ ],
+  cudaArches ? cudaPackages.flags.realArches or [ ],
   autoAddDriverRunpath,
 
   # passthru
@@ -117,17 +117,17 @@ in
 goBuild (finalAttrs: {
   pname = "ollama";
   # don't forget to invalidate all hashes each update
-  version = "0.6.7";
+  version = "0.9.5";
 
   src = fetchFromGitHub {
     owner = "ollama";
     repo = "ollama";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-GRqvaD/tAPI9cVlVu+HmRTv5zr7oCHdSlKoFfSLJ4r4=";
+    hash = "sha256-QP70s6gPL1GJv5G4VhYwWpf5raRIcOVsjPq3Jdw89eU=";
     fetchSubmodules = true;
   };
 
-  vendorHash = "sha256-t7+GLNC6mRcXq9ErxN6gGki5WWWoEcMfzRVjta4fddA=";
+  vendorHash = "sha256-oHTo8EQGfrKOwg6SRPrL23qSH+p+clBxxiXsuO1auLk=";
 
   env =
     lib.optionalAttrs enableRocm {

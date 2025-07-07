@@ -21,10 +21,11 @@
 python3Packages.buildPythonApplication rec {
   pname = "urh";
   version = "2.9.8";
+  format = "setuptools";
 
   src = fetchFromGitHub {
     owner = "jopohl";
-    repo = pname;
+    repo = "urh";
     tag = "v${version}";
     hash = "sha256-r3d80dzGwgf5Tuwt1IWGcmNbblwBNKTKKm+GGx1r2HE=";
   };

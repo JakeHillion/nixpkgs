@@ -202,8 +202,6 @@ makeScopeWithSplicing' {
 
         libqtpas = callPackage ../development/compilers/fpc/libqtpas.nix { };
 
-        libquotient = callPackage ../development/libraries/libquotient { };
-
         libqaccessibilityclient = callPackage ../development/libraries/libqaccessibilityclient { };
 
         mapbox-gl-native = libsForQt5.callPackage ../development/libraries/mapbox-gl-native { };
@@ -246,6 +244,8 @@ makeScopeWithSplicing' {
         qcoro = callPackage ../development/libraries/qcoro { };
 
         qcsxcad = callPackage ../development/libraries/science/electronics/qcsxcad { };
+
+        qcustomplot = callPackage ../development/libraries/qcustomplot { };
 
         qjson = callPackage ../development/libraries/qjson { };
 
@@ -324,8 +324,6 @@ makeScopeWithSplicing' {
         xp-pen-g430-driver = callPackage ../os-specific/linux/xp-pen-drivers/g430 { };
 
         xwaylandvideobridge = callPackage ../tools/wayland/xwaylandvideobridge { };
-
-        yuview = callPackage ../applications/video/yuview { };
       }
     ))
   );

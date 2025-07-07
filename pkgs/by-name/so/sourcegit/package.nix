@@ -15,17 +15,19 @@
 
   git,
   xdg-utils,
+
+  nix-update-script,
 }:
 
 buildDotnetModule (finalAttrs: {
   pname = "sourcegit";
-  version = "2025.09";
+  version = "2025.23";
 
   src = fetchFromGitHub {
     owner = "sourcegit-scm";
     repo = "sourcegit";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-JjAF9y3wIb6ffI3alkj9I7kG6GLLtJEKNWLtLyVE4aE=";
+    hash = "sha256-q8w1AOVsj9zVGRQzn8paUnjH3VDf+2egVSjiH24q6zI=";
   };
 
   patches = [ ./fix-darwin-git-path.patch ];
@@ -105,6 +107,8 @@ buildDotnetModule (finalAttrs: {
       mkdir -p $out/Applications/SourceGit.app/Contents/MacOS
       ln -s $out/bin/SourceGit $out/Applications/SourceGit.app/Contents/MacOS/SourceGit
     '';
+
+  passthru.updateScript = nix-update-script { };
 
   meta = {
     changelog = "https://github.com/sourcegit-scm/sourcegit/releases/tag/${finalAttrs.src.tag}";

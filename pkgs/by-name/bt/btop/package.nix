@@ -1,6 +1,5 @@
 {
   lib,
-  fetchpatch,
   config,
   stdenv,
   fetchFromGitHub,
@@ -16,13 +15,13 @@
 
 stdenv.mkDerivation rec {
   pname = "btop";
-  version = "1.4.2";
+  version = "1.4.4";
 
   src = fetchFromGitHub {
     owner = "aristocratos";
-    repo = pname;
+    repo = "btop";
     rev = "v${version}";
-    hash = "sha256-qXdIk5Mp4Cxy0//e3SwevreK8VcJwz2vUGSX7nrFvxI=";
+    hash = "sha256-4H9UjewJ7UFQtTQYwvHZL3ecPiChpfT6LEZwbdBCIa0=";
   };
 
   nativeBuildInputs =
@@ -39,12 +38,9 @@ stdenv.mkDerivation rec {
 
   installFlags = [ "PREFIX=$(out)" ];
 
-  patches = [
-    # https://github.com/aristocratos/btop/issues/1138
-    (fetchpatch {
-      url = "https://github.com/aristocratos/btop/commit/c3b225f536a263eb6d35708b1057dd4a6f1524a5.patch";
-      sha256 = "sha256-I05stm1mkiBpdNIUzL7cwG3kwcKJSHB7FEtnXxKyazQ=";
-    })
+  # fix build on darwin (see https://github.com/NixOS/nixpkgs/pull/422218#issuecomment-3039181870 and https://github.com/aristocratos/btop/pull/1173)
+  cmakeFlags = [
+    (lib.cmakeBool "BTOP_LTO" (!stdenv.hostPlatform.isDarwin))
   ];
 
   postInstall = ''
@@ -60,15 +56,16 @@ stdenv.mkDerivation rec {
   versionCheckProgramArg = "--version";
   doInstallCheck = true;
 
-  meta = with lib; {
+  meta = {
     description = "Monitor of resources";
     homepage = "https://github.com/aristocratos/btop";
     changelog = "https://github.com/aristocratos/btop/blob/v${version}/CHANGELOG.md";
-    license = licenses.asl20;
-    platforms = platforms.linux ++ platforms.darwin;
-    maintainers = with maintainers; [
+    license = lib.licenses.asl20;
+    platforms = lib.platforms.linux ++ lib.platforms.darwin;
+    maintainers = with lib.maintainers; [
       khaneliman
       rmcgibbo
+      ryan4yin
     ];
     mainProgram = "btop";
   };

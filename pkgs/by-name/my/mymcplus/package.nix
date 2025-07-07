@@ -8,10 +8,11 @@
 python3Packages.buildPythonApplication rec {
   pname = "mymcplus";
   version = "3.0.5";
+  format = "setuptools";
 
   src = fetchFromSourcehut {
     owner = "~thestr4ng3r";
-    repo = pname;
+    repo = "mymcplus";
     rev = "v${version}";
     sha256 = "sha256-GFReOgM8zi5oyePpJm5HxtizUVqqUUINTRwyG/LGWB8=";
   };

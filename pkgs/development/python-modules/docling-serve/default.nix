@@ -28,14 +28,14 @@
 
 buildPythonPackage rec {
   pname = "docling-serve";
-  version = "0.10.1";
+  version = "0.11.0";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "docling-project";
     repo = "docling-serve";
     tag = "v${version}";
-    hash = "sha256-ApI8I14X2BBenEZ9mLXifhgtY1DHdPljMd1LvjbNUXM=";
+    hash = "sha256-dPCD7Ovc6Xiga+gYOwg0mJIIhHywVOyxKIAFF5XUsYw=";
   };
 
   postPatch = ''
@@ -50,6 +50,10 @@ buildPythonPackage rec {
 
   pythonRelaxDeps = [
     "websockets"
+  ];
+
+  pythonRemoveDeps = [
+    "mlx-vlm" # not yet avainable on nixpkgs
   ];
 
   dependencies =

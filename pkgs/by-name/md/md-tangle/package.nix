@@ -7,11 +7,12 @@
 python3.pkgs.buildPythonPackage rec {
   pname = "md-tangle";
   version = "1.4.4";
+  format = "setuptools";
 
   # By some strange reason, fetchPypi fails miserably
   src = fetchFromGitHub {
     owner = "joakimmj";
-    repo = pname;
+    repo = "md-tangle";
     tag = "v${version}";
     hash = "sha256-PkOKSsyY8uwS4mhl0lB+KGeUvXfEc7PUDHZapHMYv4c=";
   };

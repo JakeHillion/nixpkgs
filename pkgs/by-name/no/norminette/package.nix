@@ -7,10 +7,11 @@
 python3Packages.buildPythonApplication rec {
   pname = "norminette";
   version = "3.3.58";
+  format = "setuptools";
 
   src = fetchFromGitHub {
     owner = "42School";
-    repo = pname;
+    repo = "norminette";
     tag = version;
     hash = "sha256-6hBBbfW2PQFb8rcDihvtWK0df7WcvOk0il1E82GOxaU=";
   };

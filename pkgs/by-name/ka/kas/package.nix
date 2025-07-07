@@ -9,10 +9,11 @@
 python3.pkgs.buildPythonApplication rec {
   pname = "kas";
   version = "4.7";
+  format = "setuptools";
 
   src = fetchFromGitHub {
     owner = "siemens";
-    repo = pname;
+    repo = "kas";
     tag = version;
     hash = "sha256-P2I3lLa8kuCORdlrwcswrWFwOA8lW2WL4Apv/2T7+f8=";
   };
@@ -32,7 +33,7 @@ python3.pkgs.buildPythonApplication rec {
   doCheck = false;
   passthru.tests.version = testers.testVersion {
     package = kas;
-    command = "${pname} --version";
+    command = "kas --version";
   };
 
   meta = with lib; {

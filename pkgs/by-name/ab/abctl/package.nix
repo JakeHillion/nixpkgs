@@ -8,13 +8,13 @@
 
 buildGoModule rec {
   pname = "abctl";
-  version = "0.24.0";
+  version = "0.28.0";
 
   src = fetchFromGitHub {
     owner = "airbytehq";
     repo = "abctl";
     tag = "v${version}";
-    hash = "sha256-O+ABjageccJudXtO5wUYLIT/kI04f68RLW0B7d//jdw=";
+    hash = "sha256-h2QojJH9pvFUv64hJimUhknurp3pStEZbZYrgqkfH68=";
   };
 
   checkFlags =
@@ -33,7 +33,7 @@ buildGoModule rec {
     in
     [ "-skip=^${lib.concatStringsSep "$|^" skippedTests}$" ];
 
-  vendorHash = "sha256-4pi5EX7N4zf72rez2aClFezgnT70A7Crd2YTasl5CvU=";
+  vendorHash = "sha256-CKku+zfU25LPQRuqsAQos3PX2bXUHEDQrD7sGeFnRKg=";
 
   passthru.updateScript = nix-update-script { };
 

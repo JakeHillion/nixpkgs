@@ -10,10 +10,11 @@
 python3.pkgs.buildPythonApplication rec {
   pname = "inkcut";
   version = "2.1.6";
+  format = "setuptools";
 
   src = fetchFromGitHub {
-    owner = pname;
-    repo = pname;
+    owner = "inkcut";
+    repo = "inkcut";
     tag = "v${version}";
     hash = "sha256-qfgzJTFr4VTV/x4PVnUKJzIndfjXB8z2jTWLXvadBuY=";
   };

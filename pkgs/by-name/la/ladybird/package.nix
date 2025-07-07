@@ -2,13 +2,14 @@
   lib,
   stdenv,
   fetchFromGitHub,
-  fetchurl,
   cacert,
   unicode-emoji,
   unicode-character-database,
   unicode-idna,
   publicsuffix-list,
   cmake,
+  copyDesktopItems,
+  makeDesktopItem,
   ninja,
   pkg-config,
   curl,
@@ -29,26 +30,22 @@
   nixosTests,
   unstableGitUpdater,
   apple-sdk_14,
+  libtommath,
 }:
 
 let
-  adobe-icc-profiles = fetchurl {
-    url = "https://download.adobe.com/pub/adobe/iccprofiles/win/AdobeICCProfilesCS4Win_end-user.zip";
-    hash = "sha256-kgQ7fDyloloPaXXQzcV9tgpn3Lnr37FbFiZzEb61j5Q=";
-    name = "adobe-icc-profiles.zip";
-  };
   # Note: The cacert version is synthetic and must match the version in the package's CMake
-  cacert_version = "2023-12-12";
+  cacert_version = "2025-05-20";
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "ladybird";
-  version = "0-unstable-2025-05-07";
+  version = "0-unstable-2025-06-27";
 
   src = fetchFromGitHub {
     owner = "LadybirdWebBrowser";
     repo = "ladybird";
-    rev = "5610f5a8652fb5273acd3739634bb8f69df1d786";
-    hash = "sha256-XG7FmadzZN9ew3oPOFjv0CzB/UzLWGq3AANRp2MQAq8=";
+    rev = "831ba5d6550fd9dfaf90153876ff42396f7165ac";
+    hash = "sha256-7feXPFKExjuOGbitlAkSEEzYNEZb6hGSDUZW1EJGIW8=";
   };
 
   postPatch = ''
@@ -83,18 +80,16 @@ stdenv.mkDerivation (finalAttrs: {
 
     mkdir build/Caches/PublicSuffix
     cp ${publicsuffix-list}/share/publicsuffix/public_suffix_list.dat build/Caches/PublicSuffix
-
-    mkdir build/Caches/AdobeICCProfiles
-    cp ${adobe-icc-profiles} build/Caches/AdobeICCProfiles/adobe-icc-profiles.zip
-    chmod +w build/Caches/AdobeICCProfiles
   '';
 
   nativeBuildInputs = [
     cmake
+    copyDesktopItems
     ninja
     pkg-config
     python3
     qt6Packages.wrapQtAppsHook
+    libtommath
   ];
 
   buildInputs =
@@ -146,12 +141,43 @@ stdenv.mkDerivation (finalAttrs: {
   # ld: [...]/OESVertexArrayObject.cpp.o: undefined reference to symbol 'glIsVertexArrayOES'
   # ld: [...]/libGL.so.1: error adding symbols: DSO missing from command line
   # https://github.com/LadybirdBrowser/ladybird/issues/371#issuecomment-2616415434
-  env.NIX_LDFLAGS = "-lGL";
+  env.NIX_LDFLAGS = "-lGL -lfontconfig";
 
-  postInstall = lib.optionalString stdenv.hostPlatform.isDarwin ''
-    mkdir -p $out/Applications $out/bin
-    mv $out/bundle/Ladybird.app $out/Applications
-  '';
+  postInstall =
+    ''
+      for size in 48x48 128x128; do
+        mkdir -p $out/share/icons/hicolor/$size/apps
+        ln -s $out/share/Lagom/icons/$size/app-browser.png \
+          $out/share/icons/hicolor/$size/apps/ladybird.png
+      done
+    ''
+    + lib.optionalString stdenv.hostPlatform.isDarwin ''
+      mkdir -p $out/Applications $out/bin
+      mv $out/bundle/Ladybird.app $out/Applications
+    '';
+
+  desktopItems = [
+    (makeDesktopItem {
+      name = "ladybird";
+      desktopName = "Ladybird";
+      exec = "Ladybird -- %U";
+      icon = "ladybird";
+      categories = [
+        "Network"
+        "WebBrowser"
+      ];
+      mimeTypes = [
+        "text/html"
+        "application/xhtml+xml"
+        "x-scheme-handler/http"
+        "x-scheme-handler/https"
+      ];
+      actions.new-window = {
+        name = "New Window";
+        exec = "Ladybird --new-window -- %U";
+      };
+    })
+  ];
 
   # Only Ladybird and WebContent need wrapped, if Qt is enabled.
   # On linux we end up wraping some non-Qt apps, like headless-browser.
@@ -175,5 +201,6 @@ stdenv.mkDerivation (finalAttrs: {
       "aarch64-darwin"
     ];
     mainProgram = "Ladybird";
+    broken = stdenv.hostPlatform.isDarwin;
   };
 })

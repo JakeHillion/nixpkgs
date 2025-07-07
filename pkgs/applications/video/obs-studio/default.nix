@@ -67,6 +67,7 @@ let
 
   cef = cef-binary.overrideAttrs (oldAttrs: {
     version = "127.3.5";
+    __intentionallyOverridingVersion = true; # `cef-binary` uses the overridden `srcHash` values in its source FOD
     gitRevision = "114ea2a";
     chromiumVersion = "127.0.6533.120";
 
@@ -80,13 +81,13 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "obs-studio";
-  version = "31.0.3";
+  version = "31.0.4";
 
   src = fetchFromGitHub {
     owner = "obsproject";
     repo = "obs-studio";
     rev = finalAttrs.version;
-    hash = "sha256-i1wkGlafPvfMTsQr5Ww5iwmUu+23cr0YmN10llJfohA=";
+    hash = "sha256-YxBPVXin8oJlo++oJogY1WMamIJmRqtSmKZDBsIZPU4=";
     fetchSubmodules = true;
   };
 

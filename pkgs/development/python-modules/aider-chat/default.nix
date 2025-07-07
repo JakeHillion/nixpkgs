@@ -3,11 +3,10 @@
   stdenv,
   buildPythonPackage,
   fetchFromGitHub,
+  replaceVars,
   gitMinimal,
   portaudio,
   playwright-driver,
-  symlinkJoin,
-  nltk-data,
   pythonOlder,
   pythonAtLeast,
   setuptools-scm,
@@ -122,15 +121,12 @@
 }:
 
 let
-  aider-nltk-data = symlinkJoin {
-    name = "aider-nltk-data";
-    paths = [
-      nltk-data.punkt_tab
-      nltk-data.stopwords
-    ];
-  };
+  aider-nltk-data = nltk.dataDir (d: [
+    d.punkt-tab
+    d.stopwords
+  ]);
 
-  version = "0.83.0";
+  version = "0.85.0";
   aider-chat = buildPythonPackage {
     pname = "aider-chat";
     inherit version;
@@ -143,7 +139,7 @@ let
       owner = "Aider-AI";
       repo = "aider";
       tag = "v${version}";
-      hash = "sha256-hXKrjo/9Y3WLgluwEK2q123QcfBVA0ByEKaq8Rtd70E=";
+      hash = "sha256-ZYjDRu4dAOkmz+fMOG8KU6y27RI/t3iEoTSUebundqo=";
     };
 
     pythonRelaxDeps = true;
@@ -259,9 +255,11 @@ let
       gitMinimal
     ];
 
-    postPatch = ''
-      substituteInPlace aider/linter.py --replace-fail "\"flake8\"" "\"${flake8}\""
-    '';
+    patches = [
+      (replaceVars ./fix-flake8-invoke.patch {
+        flake8 = lib.getExe flake8;
+      })
+    ];
 
     disabledTestPaths = [
       # Tests require network access
@@ -285,9 +283,6 @@ let
         "test_main_exit_calls_version_check"
         # AssertionError: assert 2 == 1
         "test_simple_send_non_retryable_error"
-        # Broken tests (Aider-AI/aider#3679)
-        "test_language_ocaml"
-        "test_language_ocaml_interface"
       ]
       ++ lib.optionals stdenv.hostPlatform.isDarwin [
         # Tests fails on darwin
@@ -390,8 +385,8 @@ let
 
     meta = {
       description = "AI pair programming in your terminal";
-      homepage = "https://github.com/paul-gauthier/aider";
-      changelog = "https://github.com/paul-gauthier/aider/blob/v${version}/HISTORY.md";
+      homepage = "https://github.com/Aider-AI/aider";
+      changelog = "https://github.com/Aider-AI/aider/blob/v${version}/HISTORY.md";
       license = lib.licenses.asl20;
       maintainers = with lib.maintainers; [
         happysalada
