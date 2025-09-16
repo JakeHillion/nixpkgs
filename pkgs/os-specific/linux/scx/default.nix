@@ -34,8 +34,13 @@ let
     { rustscheds = import ./scx_rustscheds.nix; }
     { full = import ./scx_full.nix; }
   ];
+  
+  standalone-schedulers = {
+    lavd = import ./scx_lavd.nix;
+  };
 in
 (lib.mapAttrs (name: scheduler: callPackage scheduler { inherit scx-common; }) schedulers)
+// (lib.mapAttrs (name: scheduler: callPackage scheduler { }) standalone-schedulers)
 // {
   inherit scx-common;
 }

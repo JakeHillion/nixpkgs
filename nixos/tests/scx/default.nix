@@ -16,6 +16,12 @@
       flash.configuration.services.scx.scheduler = "scx_flash";
       flatcg.configuration.services.scx.scheduler = "scx_flatcg";
       lavd.configuration.services.scx.scheduler = "scx_lavd";
+      lavd-standalone.configuration = {
+        services.scx = {
+          scheduler = "scx_lavd";
+          package = pkgs.scx.lavd;
+        };
+      };
       nest.configuration.services.scx.scheduler = "scx_nest";
       p2dq.configuration.services.scx.scheduler = "scx_p2dq";
       rlfifo.configuration.services.scx.scheduler = "scx_rlfifo";
@@ -32,6 +38,7 @@
       "flash",
       "flatcg",
       "lavd",
+      "lavd-standalone",
       "nest",
       "p2dq",
       "rlfifo",
